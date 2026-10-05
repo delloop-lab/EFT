@@ -189,7 +189,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-6 text-sm text-[var(--muted)] sm:flex-row sm:items-center sm:justify-between">
           <p>The EFT Guild Member Hub</p>
           <p className="flex items-center gap-2">
-            <DemoBadge /> Prototype for demonstration only
+            <DemoBadge /> Prototype for demonstration only by Trinagra Venture Studio
           </p>
         </div>
       </footer>
