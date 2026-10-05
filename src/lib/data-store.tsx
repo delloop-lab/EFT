@@ -28,7 +28,7 @@ import type {
 } from "./types";
 import { DEFAULT_PREFERENCES } from "./types";
 
-const STORAGE_KEY = "eft-demo-state-v1";
+const STORAGE_KEY = "eft-demo-state-v2";
 
 function uid(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;

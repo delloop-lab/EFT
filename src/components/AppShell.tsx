@@ -64,7 +64,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3">
           <Link href="/" className="flex shrink-0 items-center gap-2">
-            <Image src="/logo.png" alt="The EFT Centre" width={120} height={83} priority />
+            <Image src="/logo-guild.png" alt="The EFT Guild" width={56} height={56} priority />
             <DemoBadge />
           </Link>
 
@@ -187,7 +187,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <footer className="border-t border-[var(--border)] bg-white">
         <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-6 text-sm text-[var(--muted)] sm:flex-row sm:items-center sm:justify-between">
-          <p>The EFT Centre Member Hub</p>
+          <p>The EFT Guild Member Hub</p>
           <p className="flex items-center gap-2">
             <DemoBadge /> Prototype for demonstration only
           </p>

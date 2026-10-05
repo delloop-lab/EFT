@@ -1,4 +1,4 @@
-# EFT International — Member Information Hub (Demo MVP)
+# The EFT Guild Member Hub (Demo MVP)
 
 A client demonstration prototype of a private association information-sharing platform.
 

@@ -366,10 +366,10 @@ export const members: Member[] = [...demoUsers, ...additionalMembers];
 export const posts: Post[] = [
   {
     id: "post-1",
-    title: "Annual General Meeting announced for 18 October",
+    title: "The EFT Guild Annual General Meeting announced for 18 October",
     summary:
-      "Members are invited to attend the AGM at the association headquarters in London, with remote attendance available.",
-    body: "We are pleased to announce that this year's Annual General Meeting will take place on Saturday 18 October at 10:00 at Association House, London. Remote attendance will be available via a secure link sent to registered members closer to the date.\n\nThe agenda will include the annual report, financial statements, committee elections and a short Q&A. Please register your attendance by 4 October so we can prepare materials and seating.\n\nProxy voting forms are available from the Members area. If you have questions ahead of the meeting, please contact the secretary.",
+      "Members are invited to attend The EFT Guild AGM at the association headquarters in London, with remote attendance available.",
+    body: "We are pleased to announce that The EFT Guild Annual General Meeting will take place on Saturday 18 October at 10:00 at Association House, London. Remote attendance will be available via a secure link sent to registered members closer to the date.\n\nThe agenda will include the annual report, financial statements, committee elections and a short Q&A. Please register your attendance by 4 October so we can prepare materials and seating.\n\nProxy voting forms are available from the Members area. If you have questions ahead of the meeting, please contact the secretary.",
     authorId: "user-david",
     date: "2026-09-12T09:00:00.000Z",
     categoryId: "cat-news-announcements",
@@ -378,9 +378,9 @@ export const posts: Post[] = [
   },
   {
     id: "post-2",
-    title: "Committee update: September summary",
+    title: "The EFT Guild committee update: September summary",
     summary:
-      "A brief overview of recent committee decisions on training pathways, regional groups and the conference venue.",
+      "A brief overview of recent committee decisions at The EFT Guild on training pathways, regional groups and the conference venue.",
     body: "The committee met on 2 September. Key points from the meeting:\n\n• Training pathway documentation will be refreshed for 2027 intake.\n• Three new regional coordinators have been appointed for Scotland, Wales and the South West.\n• The 2027 conference venue shortlist has been narrowed to two cities; a final decision is expected in November.\n\nFull minutes will be published after formal approval at the next meeting.",
     authorId: "user-david",
     date: "2026-09-08T14:30:00.000Z",
@@ -389,10 +389,10 @@ export const posts: Post[] = [
   },
   {
     id: "post-3",
-    title: "New membership information for 2027",
+    title: "The EFT Guild membership information for 2027",
     summary:
-      "Renewal dates, fee structure and what is included in your membership for the coming year.",
-    body: "Membership renewals for 2027 open on 1 November. Fees remain unchanged for the coming year. Your membership continues to include access to this information hub, discounted workshop rates, the quarterly newsletter and voting rights at the AGM.\n\nStudent and retired member rates are still available. If your circumstances have changed, please update your details before renewing.",
+      "Renewal dates, fee structure and what is included in your membership of The EFT Guild for the coming year.",
+    body: "Membership renewals for The EFT Guild in 2027 open on 1 November. Fees remain unchanged for the coming year. Your membership continues to include access to this information hub, discounted workshop rates, the quarterly newsletter and voting rights at the AGM.\n\nStudent and retired member rates are still available. If your circumstances have changed, please update your details before renewing.",
     authorId: "user-david",
     date: "2026-09-05T11:00:00.000Z",
     categoryId: "cat-news-membership",
@@ -400,10 +400,10 @@ export const posts: Post[] = [
   },
   {
     id: "post-4",
-    title: "Summer Social — thank you and photos",
+    title: "The EFT Guild Summer Social — thank you and photos",
     summary:
-      "A warm thank you to everyone who joined us in July. Photos and a short write-up are now available.",
-    body: "Over 120 members attended the Summer Social in Bath. It was a wonderful afternoon of conversation, light workshops and networking. Thank you to the volunteers who made the day possible.\n\nA photo gallery and short write-up are available in the Events section. We hope to see even more of you next year.",
+      "A warm thank you to everyone who joined The EFT Guild Summer Social in July. Photos and a short write-up are now available.",
+    body: "Over 120 members attended The EFT Guild Summer Social in Bath. It was a wonderful afternoon of conversation, light workshops and networking. Thank you to the volunteers who made the day possible.\n\nA photo gallery and short write-up are available in the Events section. We hope to see even more of you next year.",
     authorId: "user-david",
     date: "2026-08-02T16:00:00.000Z",
     categoryId: "cat-news-events",
@@ -411,10 +411,10 @@ export const posts: Post[] = [
   },
   {
     id: "post-5",
-    title: "Important maintenance notice: Association House",
+    title: "Important The EFT Guild maintenance notice: Association House",
     summary:
       "Building works will temporarily affect access to the members' lounge and ground-floor meeting rooms.",
-    body: "From Monday 13 October to Friday 24 October, Association House will undergo essential electrical and accessibility works. The members' lounge and ground-floor meeting rooms will be closed during this period.\n\nStaff offices on the first floor remain open by appointment. Online services are unaffected. We apologise for any inconvenience.",
+    body: "From Monday 13 October to Friday 24 October, Association House will undergo essential electrical and accessibility works. The members' lounge and ground-floor meeting rooms will be closed during this period.\n\nStaff offices on the first floor remain open by appointment. Online services for The EFT Guild are unaffected. We apologise for any inconvenience.",
     authorId: "user-michael",
     date: "2026-09-20T08:00:00.000Z",
     categoryId: "cat-news-announcements",
@@ -423,10 +423,10 @@ export const posts: Post[] = [
   },
   {
     id: "post-6",
-    title: "Association newsletter — Autumn edition",
+    title: "The EFT Guild newsletter — Autumn edition",
     summary:
-      "Practitioner spotlights, upcoming workshops, research notes and regional news in this quarter's newsletter.",
-    body: "The Autumn newsletter is now available. In this edition: a practitioner spotlight with Grace Okonkwo, dates for winter workshops, a short research note from Thomas Nguyen, and updates from regional coordinators.\n\nYou can read the newsletter here in the News section. Printed copies will be posted to members who have opted in.",
+      "Practitioner spotlights, upcoming workshops, research notes and regional news in this quarter's newsletter from The EFT Guild.",
+    body: "The EFT Guild Autumn newsletter is now available. In this edition: a practitioner spotlight with Grace Okonkwo, dates for winter workshops, a short research note from Thomas Nguyen, and updates from regional coordinators.\n\nYou can read the newsletter here in the News section. Printed copies will be posted to members who have opted in.",
     authorId: "user-david",
     date: "2026-09-15T10:00:00.000Z",
     categoryId: "cat-news-community",
@@ -445,10 +445,10 @@ export const posts: Post[] = [
   },
   {
     id: "post-8",
-    title: "Community update: new peer supervision circles",
+    title: "The EFT Guild community update: new peer supervision circles",
     summary:
-      "Three new peer supervision circles are forming for late 2026 — spaces are limited.",
-    body: "We are pleased to confirm three new peer supervision circles starting in November: one online (Tuesday evenings), one in Manchester (Wednesday mornings) and one in London (Thursday evenings).\n\nEach circle will have a maximum of eight participants. If you would like to join, please submit an expression of interest via the Members area before 20 October.",
+      "Three new peer supervision circles from The EFT Guild are forming for late 2026 — spaces are limited.",
+    body: "We are pleased to confirm three new peer supervision circles from The EFT Guild starting in November: one online (Tuesday evenings), one in Manchester (Wednesday mornings) and one in London (Thursday evenings).\n\nEach circle will have a maximum of eight participants. If you would like to join, please submit an expression of interest via the Members area before 20 October.",
     authorId: "user-helen",
     date: "2026-09-22T09:30:00.000Z",
     categoryId: "cat-news-community",
@@ -469,8 +469,8 @@ export const discussions: Discussion[] = [
   },
   {
     id: "disc-2",
-    title: "Suggestions for the summer event",
-    body: "Planning for next year's Summer Social is starting early. What would you like to see? More informal networking time, short skill shares, or something completely different?",
+    title: "Suggestions for The EFT Guild summer event",
+    body: "Planning for next year's EFT Guild Summer Social is starting early. What would you like to see? More informal networking time, short skill shares, or something completely different?",
     authorId: "user-harry",
     date: "2026-09-19T16:40:00.000Z",
     categoryId: "cat-disc-events",
@@ -519,8 +519,8 @@ export const discussions: Discussion[] = [
   },
   {
     id: "disc-7",
-    title: "Best resources for newly accredited members?",
-    body: "I've just completed accreditation and would love pointers on supervision, insurance and sensible first-client steps. What helped you most in your first year?",
+    title: "Best The EFT Guild resources for newly accredited members?",
+    body: "I've just completed The EFT Guild accreditation and would love pointers on supervision, insurance and sensible first-client steps. What helped you most in your first year?",
     authorId: "user-noah",
     date: "2026-09-20T09:00:00.000Z",
     categoryId: "cat-disc-practice",
@@ -549,7 +549,7 @@ export const discussions: Discussion[] = [
   },
   {
     id: "disc-10",
-    title: "Ideas for supporting members outside major cities",
+    title: "Ideas for supporting The EFT Guild members outside major cities",
     body: "As someone practising outside the big hubs, I'd love to hear ideas for better support — more regional hubs, travel bursaries for events, or stronger online community options?",
     authorId: "user-oscar",
     date: "2026-09-13T10:30:00.000Z",
@@ -789,27 +789,27 @@ export const comments: Comment[] = [
 export const events: EventItem[] = [
   {
     id: "evt-1",
-    name: "Annual General Meeting",
+    name: "The EFT Guild Annual General Meeting",
     description:
-      "Official AGM including annual report, financial statements, committee elections and member Q&A. Remote attendance available.",
+      "Official The EFT Guild AGM including annual report, financial statements, committee elections and member Q&A. Remote attendance available.",
     date: "2026-10-18",
     time: "10:00",
     location: "Association House, London (and online)",
   },
   {
     id: "evt-2",
-    name: "Members' Dinner",
+    name: "The EFT Guild Members' Dinner",
     description:
-      "An evening dinner for members following the autumn workshop series. Informal dress. Places are limited.",
+      "An evening dinner for The EFT Guild members following the autumn workshop series. Informal dress. Places are limited.",
     date: "2026-11-14",
     time: "19:00",
     location: "The Riverside Room, Manchester",
   },
   {
     id: "evt-3",
-    name: "Community Meeting — Midlands",
+    name: "The EFT Guild Community Meeting — Midlands",
     description:
-      "Open community meeting for Midlands members: regional updates, peer introductions and light refreshments.",
+      "Open community meeting for Midlands members of The EFT Guild: regional updates, peer introductions and light refreshments.",
     date: "2026-10-12",
     time: "10:00",
     location: "Community Centre, Birmingham",
@@ -825,18 +825,18 @@ export const events: EventItem[] = [
   },
   {
     id: "evt-5",
-    name: "Summer Social 2026",
+    name: "The EFT Guild Summer Social 2026",
     description:
-      "Our annual summer gathering with networking, light skill shares and afternoon tea. A lovely day in Bath.",
+      "The EFT Guild's annual summer gathering with networking, light skill shares and afternoon tea. A lovely day in Bath.",
     date: "2026-07-19",
     time: "13:00",
     location: "Assembly Rooms, Bath",
   },
   {
     id: "evt-6",
-    name: "Christmas Event",
+    name: "The EFT Guild Christmas Event",
     description:
-      "Seasonal gathering for members and guests. Short seasonal address, refreshments and optional carol moment.",
+      "Seasonal gathering for The EFT Guild members and guests. Short seasonal address, refreshments and optional carol moment.",
     date: "2026-12-12",
     time: "16:00",
     location: "Association House, London",
@@ -848,8 +848,8 @@ export const notifications: Notification[] = [
     id: "ntf-1",
     userId: "user-sarah",
     type: "announcement",
-    title: "New association announcement",
-    message: "A new association announcement has been published: Important maintenance notice.",
+    title: "New The EFT Guild announcement",
+    message: "A new announcement from The EFT Guild has been published: Important maintenance notice.",
     date: "2026-09-20T08:05:00.000Z",
     read: false,
     relatedType: "news",
@@ -871,7 +871,7 @@ export const notifications: Notification[] = [
     userId: "user-sarah",
     type: "event",
     title: "Upcoming event reminder",
-    message: "The Annual General Meeting is on 18 October. Registration closes soon.",
+    message: "The EFT Guild Annual General Meeting is on 18 October. Registration closes soon.",
     date: "2026-09-22T09:00:00.000Z",
     read: true,
     relatedType: "event",
@@ -881,8 +881,8 @@ export const notifications: Notification[] = [
     id: "ntf-4",
     userId: "user-sarah",
     type: "news",
-    title: "Newsletter published",
-    message: "The Autumn edition of the association newsletter is now available.",
+    title: "The EFT Guild newsletter published",
+    message: "The Autumn edition of The EFT Guild newsletter is now available.",
     date: "2026-09-15T10:05:00.000Z",
     read: true,
     relatedType: "news",
@@ -893,7 +893,7 @@ export const notifications: Notification[] = [
     userId: "user-david",
     type: "comment_on_own",
     title: "New comment on your discussion",
-    message: "Callum commented on “Suggestions for the summer event”.",
+    message: "Callum commented on “Suggestions for The EFT Guild summer event”.",
     date: "2026-09-25T09:11:00.000Z",
     read: false,
     relatedType: "discussion",
@@ -903,7 +903,7 @@ export const notifications: Notification[] = [
     id: "ntf-6",
     userId: "user-helen",
     type: "announcement",
-    title: "New association announcement",
+    title: "New The EFT Guild announcement",
     message: "Important maintenance notice for Association House has been published.",
     date: "2026-09-20T08:05:00.000Z",
     read: false,
@@ -937,9 +937,9 @@ export const notifications: Notification[] = [
 export const submissions: Submission[] = [
   {
     id: "sub-1",
-    title: "Could we organise a members' walking group?",
+    title: "Could we organise an EFT Guild members' walking group?",
     content:
-      "I'd like to propose a gentle monthly walking group for members — informal, welcoming, and open to all fitness levels. Happy to help coordinate a Bristol starting point.",
+      "I'd like to propose a gentle monthly walking group for The EFT Guild members — informal, welcoming, and open to all fitness levels. Happy to help coordinate a Bristol starting point.",
     categoryId: "cat-disc-general",
     type: "discussion",
     authorId: "user-sarah",
@@ -948,9 +948,9 @@ export const submissions: Submission[] = [
   },
   {
     id: "sub-2",
-    title: "Request: clearer guidance for first-year insurance",
+    title: "Request: clearer The EFT Guild guidance for first-year insurance",
     content:
-      "Many newly accredited members find insurance confusing. Could the association publish a short plain-English guide with common questions?",
+      "Many newly accredited members find insurance confusing. Could The EFT Guild publish a short plain-English guide with common questions?",
     categoryId: "cat-disc-practice",
     type: "discussion",
     authorId: "user-lily",
@@ -981,9 +981,9 @@ export const submissions: Submission[] = [
   },
   {
     id: "sub-5",
-    title: "Volunteer call for Christmas Event",
+    title: "Volunteer call for The EFT Guild Christmas Event",
     content:
-      "We will need stewards and a small welcome team for the December Christmas Event. Please consider publishing a short call for volunteers.",
+      "We will need stewards and a small welcome team for The EFT Guild December Christmas Event. Please consider publishing a short call for volunteers.",
     categoryId: "cat-news-events",
     type: "news",
     authorId: "user-harry",

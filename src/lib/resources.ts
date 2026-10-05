@@ -3,9 +3,9 @@ import type { ResourceItem } from "./types";
 export const resources: ResourceItem[] = [
   {
     id: "res-audio-intro",
-    title: "EFT intro tapping guide",
+    title: "The EFT Guild intro tapping guide",
     description:
-      "A short audio walkthrough of the basic tapping points for members new to EFT.",
+      "A short audio walkthrough of the basic tapping points for members new to The EFT Guild.",
     kind: "audio",
     fileName: "eft-intro-tapping.wav",
     href: "/resources/audio/eft-intro-tapping.wav",
@@ -39,9 +39,9 @@ export const resources: ResourceItem[] = [
   },
   {
     id: "res-video-tapping",
-    title: "Tapping sequence demo",
+    title: "The EFT Guild tapping sequence demo",
     description:
-      "Demo video clip showing a short tapping sequence members can download and revisit offline.",
+      "Demo video clip from The EFT Guild showing a short tapping sequence members can download and revisit offline.",
     kind: "video",
     fileName: "tapping-sequence-demo.mp4",
     href: "/resources/video/tapping-sequence-demo.mp4",
@@ -51,9 +51,9 @@ export const resources: ResourceItem[] = [
   },
   {
     id: "res-video-workshop",
-    title: "Workshop recap clip",
+    title: "The EFT Guild workshop recap clip",
     description:
-      "A short workshop-style recap video for members who missed the live session.",
+      "A short workshop-style recap video from The EFT Guild for members who missed the live session.",
     kind: "video",
     fileName: "workshop-recap-clip.mp4",
     href: "/resources/video/workshop-recap-clip.mp4",
