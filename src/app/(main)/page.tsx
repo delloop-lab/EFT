@@ -35,12 +35,17 @@ export default function HomePage() {
 
   return (
     <div className="space-y-8 animate-fade-up">
-      <section className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm font-medium text-[var(--blue)]">Member hub</p>
-          <h1 className="mt-1 text-3xl font-semibold sm:text-4xl">
-            {greeting || `Welcome, ${currentUser.name.split(" ")[0]}`}
+          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[var(--blue)]">
+            The EFT Centre
+          </p>
+          <h1 className="mt-1 font-semibold leading-none text-[var(--navy)] text-5xl sm:text-6xl md:text-7xl">
+            Member Hub
           </h1>
+          <p className="mt-4 text-xl font-medium text-[var(--navy-soft)] sm:text-2xl">
+            {greeting || `Welcome, ${currentUser.name.split(" ")[0]}`}
+          </p>
           <p className="mt-2 max-w-xl text-[var(--muted)]">
             Official news, member discussions and events — follow only what matters to you.
           </p>

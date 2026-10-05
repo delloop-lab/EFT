@@ -3,9 +3,9 @@ import { DataStoreProvider } from "@/lib/data-store";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "EFT International — Member Hub",
+  title: "The EFT Centre Member Hub",
   description:
-    "Private information hub for EFT International members. Demo prototype.",
+    "Private member hub for The EFT Centre. Demo prototype.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

@@ -76,6 +76,20 @@ export interface EventItem {
   imageUrl?: string;
 }
 
+export type ResourceKind = "audio" | "video";
+
+export interface ResourceItem {
+  id: string;
+  title: string;
+  description: string;
+  kind: ResourceKind;
+  fileName: string;
+  href: string;
+  duration: string;
+  sizeLabel: string;
+  format: string;
+}
+
 export interface Notification {
   id: string;
   userId: string;

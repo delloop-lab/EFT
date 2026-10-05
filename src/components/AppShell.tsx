@@ -13,6 +13,7 @@ const navItems = [
   { href: "/news", label: "News" },
   { href: "/discussions", label: "Discussions" },
   { href: "/events", label: "Events" },
+  { href: "/resources", label: "Resources" },
   { href: "/members", label: "Members" },
   { href: "/account", label: "My Account" },
 ];
@@ -63,7 +64,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3">
           <Link href="/" className="flex shrink-0 items-center gap-2">
-            <Image src="/logo.png" alt="EFT International" width={120} height={40} priority />
+            <Image src="/logo.png" alt="The EFT Centre" width={120} height={40} priority />
             <DemoBadge />
           </Link>
 
@@ -186,7 +187,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <footer className="border-t border-[var(--border)] bg-white">
         <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-6 text-sm text-[var(--muted)] sm:flex-row sm:items-center sm:justify-between">
-          <p>EFT International — Member Information Hub</p>
+          <p>The EFT Centre Member Hub</p>
           <p className="flex items-center gap-2">
             <DemoBadge /> Prototype for demonstration only
           </p>

@@ -22,10 +22,15 @@ export default function LoginPage() {
     <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
       <div className="card w-full max-w-lg p-8 shadow-sm animate-fade-up">
         <div className="mb-6 flex flex-col items-center text-center">
-          <Image src="/logo.png" alt="EFT International" width={160} height={54} priority />
-          <div className="mt-3 flex items-center gap-2">
-            <h1 className="text-2xl font-semibold">Member Information Hub</h1>
-            <DemoBadge />
+          <Image src="/logo.png" alt="The EFT Centre" width={160} height={54} priority />
+          <div className="mt-3 flex flex-col items-center gap-1">
+            <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[var(--blue)]">
+              The EFT Centre
+            </p>
+            <div className="flex items-center gap-2">
+              <h1 className="text-3xl font-semibold text-[var(--navy)] sm:text-4xl">Member Hub</h1>
+              <DemoBadge />
+            </div>
           </div>
           <p className="mt-2 max-w-sm text-sm text-[var(--muted)]">
             Choose a demo user to explore the prototype. Nothing here is a real login —
