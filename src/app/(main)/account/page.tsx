@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useState } from "react";
 import { Avatar } from "@/components/Avatar";
 import { roleLabel, useDataStore } from "@/lib/data-store";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatDateTime } from "@/lib/format";
+import { resources } from "@/lib/resources";
 import type { NotificationPreference } from "@/lib/types";
 
 export default function AccountPage() {
@@ -13,6 +14,7 @@ export default function AccountPage() {
     getDiscussions,
     getSubmissions,
     getPreferences,
+    getResourceActivity,
     updateProfile,
     updatePreferences,
   } = useDataStore();
@@ -32,6 +34,7 @@ export default function AccountPage() {
   const myDiscussions = getDiscussions().filter((d) => d.authorId === userId);
   const following = getDiscussions().filter((d) => d.followers.includes(userId));
   const mySubmissions = getSubmissions().filter((s) => s.authorId === userId);
+  const myResourceActivity = getResourceActivity(userId);
 
   function saveProfile(e: React.FormEvent) {
     e.preventDefault();
@@ -87,6 +90,52 @@ export default function AccountPage() {
             {saved && <span className="text-sm text-[var(--green-deep)]">Saved</span>}
           </div>
         </form>
+      </section>
+
+      <section className="card p-5">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <h2 className="section-title mb-0">My resources</h2>
+          <Link href="/resources" className="text-sm font-medium text-[var(--blue)]">
+            Browse resources
+          </Link>
+        </div>
+        <ul className="space-y-3">
+          {myResourceActivity.length === 0 && (
+            <li className="text-sm text-[var(--muted)]">
+              You haven’t watched or downloaded any resources yet.
+            </li>
+          )}
+          {myResourceActivity.map((activity) => {
+            const resource = resources.find((r) => r.id === activity.resourceId);
+            if (!resource) return null;
+            return (
+              <li
+                key={activity.id}
+                className="flex flex-col gap-2 rounded-lg border border-[var(--border)] p-3 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span
+                      className={
+                        activity.action === "watched" ? "badge badge-blue" : "badge badge-green"
+                      }
+                    >
+                      {activity.action}
+                    </span>
+                    <span className="badge">{resource.kind}</span>
+                  </div>
+                  <div className="mt-1 font-semibold text-[var(--navy)]">{resource.title}</div>
+                  <p className="mt-0.5 text-xs text-[var(--muted)]">
+                    {formatDateTime(activity.date)}
+                  </p>
+                </div>
+                <Link href="/resources" className="text-sm font-medium text-[var(--blue)]">
+                  View
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
       </section>
 
       <section className="card p-5">

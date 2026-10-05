@@ -1011,5 +1011,6 @@ export function getSeedState() {
     notifications: structuredClone(notifications),
     submissions: structuredClone(submissions),
     preferences: createDefaultPreferences(),
+    resourceActivity: [],
   };
 }

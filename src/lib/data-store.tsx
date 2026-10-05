@@ -20,6 +20,8 @@ import type {
   NotificationPreference,
   Post,
   PostStatus,
+  ResourceActivity,
+  ResourceActivityAction,
   Role,
   Submission,
   SubmissionType,
@@ -45,6 +47,7 @@ function loadState(): DemoState {
         ...getSeedState().preferences,
         ...(parsed.preferences || {}),
       },
+      resourceActivity: parsed.resourceActivity ?? [],
     };
   } catch {
     return getSeedState();
@@ -78,6 +81,8 @@ interface DataStoreValue {
   getNotifications: (userId?: string) => Notification[];
   getSubmissions: (status?: Submission["status"]) => Submission[];
   getPreferences: (userId?: string) => NotificationPreference;
+  getResourceActivity: (userId?: string) => ResourceActivity[];
+  trackResourceActivity: (resourceId: string, action: ResourceActivityAction) => void;
   updateProfile: (memberId: string, updates: Partial<Member>) => void;
   updatePreferences: (userId: string, prefs: NotificationPreference) => void;
   createDiscussion: (input: {
@@ -225,6 +230,51 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
       return state.preferences[id] ?? { ...DEFAULT_PREFERENCES };
     },
     [state.preferences, state.currentUserId]
+  );
+
+  const getResourceActivity = useCallback(
+    (userId?: string) => {
+      const uidFilter = userId ?? state.currentUserId;
+      return [...(state.resourceActivity ?? [])]
+        .filter((a) => a.userId === uidFilter)
+        .sort((a, b) => b.date.localeCompare(a.date));
+    },
+    [state.resourceActivity, state.currentUserId]
+  );
+
+  const trackResourceActivity = useCallback(
+    (resourceId: string, action: ResourceActivityAction) => {
+      if (!state.currentUserId) return;
+      const userId = state.currentUserId;
+      const now = new Date().toISOString();
+      update((prev) => {
+        const existing = (prev.resourceActivity ?? []).find(
+          (a) => a.userId === userId && a.resourceId === resourceId && a.action === action
+        );
+        if (existing) {
+          return {
+            ...prev,
+            resourceActivity: (prev.resourceActivity ?? []).map((a) =>
+              a.id === existing.id ? { ...a, date: now } : a
+            ),
+          };
+        }
+        return {
+          ...prev,
+          resourceActivity: [
+            ...(prev.resourceActivity ?? []),
+            {
+              id: uid("resact"),
+              userId,
+              resourceId,
+              action,
+              date: now,
+            },
+          ],
+        };
+      });
+    },
+    [state.currentUserId, update]
   );
 
   const updateProfile = useCallback(
@@ -716,6 +766,8 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
     getNotifications,
     getSubmissions,
     getPreferences,
+    getResourceActivity,
+    trackResourceActivity,
     updateProfile,
     updatePreferences,
     createDiscussion,

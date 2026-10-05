@@ -1,12 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useDataStore } from "@/lib/data-store";
 import { resources } from "@/lib/resources";
 import type { ResourceKind } from "@/lib/types";
 
 type Filter = "all" | ResourceKind;
 
 export default function ResourcesPage() {
+  const { trackResourceActivity } = useDataStore();
   const [filter, setFilter] = useState<Filter>("all");
 
   const items = useMemo(
@@ -69,7 +71,13 @@ export default function ResourcesPage() {
 
                 <div className="mt-4">
                   {resource.kind === "audio" ? (
-                    <audio controls preload="metadata" className="w-full max-w-xl" src={resource.href}>
+                    <audio
+                      controls
+                      preload="metadata"
+                      className="w-full max-w-xl"
+                      src={resource.href}
+                      onPlay={() => trackResourceActivity(resource.id, "watched")}
+                    >
                       Your browser does not support audio playback.
                     </audio>
                   ) : (
@@ -78,6 +86,7 @@ export default function ResourcesPage() {
                       preload="metadata"
                       className="aspect-video w-full max-w-xl rounded-md bg-black"
                       src={resource.href}
+                      onPlay={() => trackResourceActivity(resource.id, "watched")}
                     >
                       Your browser does not support video playback.
                     </video>
@@ -86,7 +95,12 @@ export default function ResourcesPage() {
               </div>
 
               <div className="flex shrink-0 flex-col gap-2 sm:flex-row lg:flex-col">
-                <a href={resource.href} download={resource.fileName} className="btn-primary">
+                <a
+                  href={resource.href}
+                  download={resource.fileName}
+                  className="btn-primary"
+                  onClick={() => trackResourceActivity(resource.id, "downloaded")}
+                >
                   Download
                 </a>
                 <a
@@ -94,6 +108,7 @@ export default function ResourcesPage() {
                   target="_blank"
                   rel="noreferrer"
                   className="btn-secondary"
+                  onClick={() => trackResourceActivity(resource.id, "downloaded")}
                 >
                   Open file
                 </a>

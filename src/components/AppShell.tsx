@@ -64,7 +64,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3">
           <Link href="/" className="flex shrink-0 items-center gap-2">
-            <Image src="/logo.png" alt="The EFT Centre" width={120} height={40} priority />
+            <Image src="/logo.png" alt="The EFT Centre" width={120} height={83} priority />
             <DemoBadge />
           </Link>
 

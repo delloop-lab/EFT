@@ -90,6 +90,16 @@ export interface ResourceItem {
   format: string;
 }
 
+export type ResourceActivityAction = "watched" | "downloaded";
+
+export interface ResourceActivity {
+  id: string;
+  userId: string;
+  resourceId: string;
+  action: ResourceActivityAction;
+  date: string;
+}
+
 export interface Notification {
   id: string;
   userId: string;
@@ -131,6 +141,7 @@ export interface DemoState {
   notifications: Notification[];
   submissions: Submission[];
   preferences: Record<string, NotificationPreference>;
+  resourceActivity: ResourceActivity[];
 }
 
 export const DEFAULT_PREFERENCES: NotificationPreference = {
