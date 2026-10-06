@@ -15,6 +15,8 @@ export type HubUser = {
   bannerUrl: string;
   role: HubRole;
   bio?: string;
+  /** Preferred personal / practice website */
+  websiteUrl?: string;
 };
 
 export type Reaction = {
@@ -42,6 +44,9 @@ export type Status = {
   videoPoster?: string;
   /** When set, render as YouTube embed instead of file video */
   youtubeId?: string;
+  /** Optional attached audio (e.g. guided tapping round) */
+  audioUrl?: string;
+  audioTitle?: string;
   isDm?: boolean;
   dmParticipants?: string[];
   pinned?: boolean;
@@ -51,10 +56,15 @@ export type Status = {
 
 export type HubNotification = {
   id: string;
+  /** Who receives this activity item */
+  recipientId: string;
   actorId: string;
   kind: NotificationKind;
   createdAt: string;
   preview?: string;
+  /** Optional related post for “open in feed” */
+  statusId?: string;
+  read: boolean;
 };
 
 export type ModerationReport = {
@@ -95,6 +105,7 @@ export const MEMBER_USER: HubUser = {
     "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800&q=80&auto=format&fit=crop",
   role: "member",
   bio: "Practice circle host · Borrowing Benefits fan",
+  websiteUrl: "https://www.marinacosta.com",
 };
 
 export const ADMIN_USER: HubUser = {
@@ -123,6 +134,7 @@ export const USERS: Record<string, HubUser> = {
       "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80&auto=format&fit=crop",
     role: "member",
     bio: "EFT practitioner · Daisy Chain partner · Level 2",
+    websiteUrl: "https://www.alexrivera.com",
   },
   "u-joao": {
     id: "u-joao",
@@ -133,6 +145,7 @@ export const USERS: Record<string, HubUser> = {
       "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&q=80&auto=format&fit=crop",
     role: "member",
     bio: "Advanced short courses · Surrogate Tapping",
+    websiteUrl: "https://www.joaomendes.com",
   },
   "u-elena": {
     id: "u-elena",
@@ -143,6 +156,7 @@ export const USERS: Record<string, HubUser> = {
       "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=800&q=80&auto=format&fit=crop",
     role: "member",
     bio: "Member videos · tapping demos",
+    websiteUrl: "https://www.clairelinley.com",
   },
   "u-kenji": {
     id: "u-kenji",
@@ -153,6 +167,7 @@ export const USERS: Record<string, HubUser> = {
       "https://images.unsplash.com/photo-1511497584788-876760111969?w=800&q=80&auto=format&fit=crop",
     role: "member",
     bio: "Level 3 path · EFT Imagineering",
+    websiteUrl: "https://www.kenjisato.com",
   },
   "u-sofia": {
     id: "u-sofia",
@@ -163,6 +178,7 @@ export const USERS: Record<string, HubUser> = {
       "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=800&q=80&auto=format&fit=crop",
     role: "member",
     bio: "New members · self-help tapping",
+    websiteUrl: "https://www.sofiaberg.com",
   },
 };
 
@@ -214,45 +230,101 @@ export const INITIAL_REPORTS: ModerationReport[] = [
 export const INITIAL_NOTIFICATIONS: HubNotification[] = [
   {
     id: "n1",
-    actorId: "u-marina",
-    kind: "favourite",
-    createdAt: "2026-10-06T14:50:00Z",
-    preview: "favorited your tapping practice note",
+    recipientId: "u-marina",
+    actorId: "u-sofia",
+    kind: "reply",
+    createdAt: "2026-10-06T08:28:00Z",
+    preview: "replied to your Practice Circle reminder",
+    statusId: "s1",
+    read: false,
   },
   {
     id: "n2",
+    recipientId: "u-marina",
     actorId: "u-joao",
-    kind: "follow",
-    createdAt: "2026-10-06T14:20:00Z",
-    preview: "followed you — Daisy Chain round starting soon",
+    kind: "favourite",
+    createdAt: "2026-10-06T08:55:00Z",
+    preview: "liked your Practice Circle post",
+    statusId: "s1",
+    read: false,
   },
   {
     id: "n3",
+    recipientId: "u-marina",
     actorId: "u-elena",
     kind: "mention",
-    createdAt: "2026-10-06T12:05:00Z",
-    preview: "mentioned you in a tapping video post",
+    createdAt: "2026-10-06T07:25:00Z",
+    preview: "mentioned you on her tapping video",
+    statusId: "s9",
+    read: false,
   },
   {
     id: "n4",
+    recipientId: "u-marina",
     actorId: "u-kenji",
     kind: "reblog",
-    createdAt: "2026-10-06T10:40:00Z",
-    preview: "reposted your Level 3 study note",
+    createdAt: "2026-10-05T12:40:00Z",
+    preview: "reposted your EFT Cafe Atlantic note",
+    statusId: "s7",
+    read: true,
   },
   {
     id: "n5",
-    actorId: "u-sofia",
-    kind: "reply",
-    createdAt: "2026-10-05T18:10:00Z",
-    preview: "replied about skilful vs sloppy tapping",
+    recipientId: "u-marina",
+    actorId: "u-you",
+    kind: "follow",
+    createdAt: "2026-10-05T11:05:00Z",
+    preview: "started following you",
+    read: true,
   },
   {
     id: "n6",
-    actorId: "u-marina",
+    recipientId: "u-marina",
+    actorId: "u-sofia",
     kind: "favourite",
-    createdAt: "2026-09-20T09:00:00Z",
-    preview: "favorited your Borrowing Benefits tip",
+    createdAt: "2026-10-04T10:20:00Z",
+    preview: "liked your reply on self-help tapping",
+    statusId: "s8",
+    read: true,
+  },
+  {
+    id: "n7",
+    recipientId: "u-admin",
+    actorId: "u-marina",
+    kind: "mention",
+    createdAt: "2026-10-06T08:12:00Z",
+    preview: "mentioned Hub Admin in Practice Circle",
+    statusId: "s1",
+    read: false,
+  },
+  {
+    id: "n8",
+    recipientId: "u-admin",
+    actorId: "u-joao",
+    kind: "reply",
+    createdAt: "2026-10-05T20:22:00Z",
+    preview: "replied in a facilitator thread you follow",
+    statusId: "s5",
+    read: false,
+  },
+  {
+    id: "n9",
+    recipientId: "u-admin",
+    actorId: "u-sofia",
+    kind: "favourite",
+    createdAt: "2026-10-05T16:30:00Z",
+    preview: "liked the Hub welcome post",
+    statusId: "s6",
+    read: true,
+  },
+  {
+    id: "n10",
+    recipientId: "u-admin",
+    actorId: "u-kenji",
+    kind: "follow",
+    createdAt: "2026-10-04T09:00:00Z",
+    preview: "followed the Hub steward account",
+    read: true,
   },
 ];
 
@@ -274,6 +346,24 @@ export const INITIAL_STATUSES: Status[] = [
     ],
     imageUrl: "/guild-feed/workshop.jpg",
     imageAlt: "Members gathered in a small practice circle",
+  },
+  {
+    id: "s10",
+    authorId: "u-sofia",
+    subject: "Self-help tapping audio",
+    content:
+      "Shared a short guided self-help tapping round you can play with headphones — soft setup language, points in order, then a breath to notice what shifted.\n\nUseful before a session or when you only have a few quiet minutes. Tap along if you like. #SelfHelpEFT #TappingAudio #EFTGuild",
+    createdAt: "2026-10-06T08:05:00Z",
+    privacy: "public",
+    replyCount: 2,
+    reblogCount: 8,
+    favouriteCount: 24,
+    reactions: [
+      { emoji: "🎧", count: 6, reacted: false },
+      { emoji: "🙏", count: 3, reacted: true },
+    ],
+    audioUrl: "/guild-feed/self-help-tapping.mp3?v=3",
+    audioTitle: "Gentle self-help tapping round · ~30 sec",
   },
   {
     id: "s2",
@@ -623,6 +713,30 @@ export const INITIAL_STATUSES: Status[] = [
     reblogCount: 0,
     favouriteCount: 2,
     inReplyToId: "s8",
+  },
+  {
+    id: "s10-r1",
+    authorId: "u-marina",
+    content:
+      "@sofia Lovely pace — played this before Practice Circle warm-up. Headphones help a lot.",
+    createdAt: "2026-10-06T08:18:00Z",
+    privacy: "public",
+    replyCount: 0,
+    reblogCount: 0,
+    favouriteCount: 4,
+    inReplyToId: "s10",
+  },
+  {
+    id: "s10-r2",
+    authorId: "u-joao",
+    content:
+      "@sofia Clear point sequence. Saving for members who prefer audio over video when travelling.",
+    createdAt: "2026-10-06T08:33:00Z",
+    privacy: "public",
+    replyCount: 0,
+    reblogCount: 0,
+    favouriteCount: 2,
+    inReplyToId: "s10",
   },
   {
     id: "dm1",

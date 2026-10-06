@@ -1,12 +1,16 @@
 "use client";
 
 import {
+  AtSign,
   Ban,
+  Bell,
   ChevronDown,
   ChevronUp,
   Flag,
   Globe2,
+  Headphones,
   Lock,
+  MessageSquare,
   Pin,
   Repeat2,
   Reply,
@@ -15,17 +19,20 @@ import {
   SmilePlus,
   Star,
   Trash2,
+  UserPlus,
   UserRound,
   Users,
   VolumeX,
+  X,
 } from "lucide-react";
 import Image from "next/image";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ADMIN_USER,
   DEMO_ACCOUNTS,
   INITIAL_FAVOURITES,
   INITIAL_LOCAL_ACCOUNTS,
+  INITIAL_NOTIFICATIONS,
   INITIAL_REBLOGS,
   INITIAL_REPORTS,
   INITIAL_STATUSES,
@@ -36,9 +43,12 @@ import {
   formatRelativeTime,
   roleLabel,
   type FeedTab,
+  type HubNotification,
+  type HubUser,
   type LocalAccount,
   type LocalUserState,
   type ModerationReport,
+  type NotificationKind,
   type Privacy,
   type Status,
 } from "@/lib/guild-hub/mockData";
@@ -76,11 +86,13 @@ function Avatar({
   size = 48,
   className = "",
   name = "?",
+  onClick,
 }: {
   src: string;
   size?: number;
   className?: string;
   name?: string;
+  onClick?: () => void;
 }) {
   const [failed, setFailed] = useState(false);
   const initials = name
@@ -90,19 +102,15 @@ function Avatar({
     .slice(0, 2)
     .toUpperCase();
 
-  if (failed) {
-    return (
-      <span
-        className={`hub-avatar inline-flex items-center justify-center bg-[#cbd5e1] text-[var(--hub-navy)] font-semibold ${className}`}
-        style={{ width: size, height: size, fontSize: size * 0.32 }}
-        aria-hidden
-      >
-        {initials || "?"}
-      </span>
-    );
-  }
-
-  return (
+  const inner = failed ? (
+    <span
+      className={`hub-avatar inline-flex items-center justify-center bg-[#cbd5e1] text-[var(--hub-navy)] font-semibold ${className}`}
+      style={{ width: size, height: size, fontSize: size * 0.32 }}
+      aria-hidden
+    >
+      {initials || "?"}
+    </span>
+  ) : (
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src={src}
@@ -113,6 +121,20 @@ function Avatar({
       style={{ width: size, height: size }}
       onError={() => setFailed(true)}
     />
+  );
+
+  if (!onClick) return inner;
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={`View ${name}`}
+      aria-label={`View ${name}'s profile`}
+      className="rounded-lg transition hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--hub-accent)]"
+    >
+      {inner}
+    </button>
   );
 }
 
@@ -134,11 +156,26 @@ export function GuildHubDashboard() {
   const [reactionPickerFor, setReactionPickerFor] = useState<string | null>(null);
   const [composeOpen, setComposeOpen] = useState(false);
   const [expandedThreads, setExpandedThreads] = useState<Record<string, boolean>>({});
+  const [notifications, setNotifications] =
+    useState<HubNotification[]>(INITIAL_NOTIFICATIONS);
+  const [highlightStatusId, setHighlightStatusId] = useState<string | null>(null);
+  const [profileUserId, setProfileUserId] = useState<string | null>(null);
 
   const currentUser = USERS[currentUserId] ?? MEMBER_USER;
   const isAdmin = currentUser.role === "admin";
   const maxChars = metrics.maxStatusChars;
   const openReports = reports.filter((r) => r.state === "open").length;
+  const myNotifications = useMemo(
+    () =>
+      notifications
+        .filter((n) => n.recipientId === currentUserId)
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+    [notifications, currentUserId],
+  );
+  const unreadCount = useMemo(
+    () => myNotifications.filter((n) => !n.read).length,
+    [myNotifications],
+  );
   const myFavourites = useMemo(
     () => new Set(favourites[currentUserId] ?? []),
     [favourites, currentUserId],
@@ -191,6 +228,121 @@ export function GuildHubDashboard() {
     setExpandedThreads((prev) => ({ ...prev, [statusId]: !prev[statusId] }));
   }
 
+  function pushActivity(input: {
+    recipientId: string;
+    actorId: string;
+    kind: NotificationKind;
+    preview: string;
+    statusId?: string;
+  }) {
+    if (input.recipientId === input.actorId) return;
+    setNotifications((prev) => [
+      {
+        id: `n-live-${Date.now()}`,
+        recipientId: input.recipientId,
+        actorId: input.actorId,
+        kind: input.kind,
+        createdAt: new Date().toISOString(),
+        preview: input.preview,
+        statusId: input.statusId,
+        read: false,
+      },
+      ...prev,
+    ]);
+  }
+
+  function markNotificationRead(id: string) {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
+    );
+  }
+
+  function markAllNotificationsRead() {
+    setNotifications((prev) =>
+      prev.map((n) =>
+        n.recipientId === currentUserId ? { ...n, read: true } : n,
+      ),
+    );
+    showToast("Notifications marked as read");
+  }
+
+  function openNotification(n: HubNotification) {
+    markNotificationRead(n.id);
+    if (!n.statusId) return;
+    const target = statuses.find((s) => s.id === n.statusId);
+    const parentId = target?.inReplyToId ?? n.statusId;
+    setTab("timeline");
+    setExpandedThreads((prev) => ({ ...prev, [parentId]: true }));
+    setHighlightStatusId(parentId);
+    window.setTimeout(() => {
+      document.getElementById(`hub-status-${parentId}`)?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }, 80);
+    window.setTimeout(() => setHighlightStatusId(null), 2200);
+  }
+
+  function openProfile(userId: string) {
+    if (!USERS[userId]) return;
+    setProfileUserId(userId);
+  }
+
+  function closeProfile() {
+    setProfileUserId(null);
+  }
+
+  function messageUser(userId: string) {
+    if (userId === currentUserId) return;
+    setProfileUserId(null);
+    setReplyToId(null);
+    setDmTargetId(userId);
+    setPrivacy("direct");
+    setSubject("");
+    setDraft("");
+    setComposeOpen(true);
+    setTab("direct");
+  }
+
+  function openProfilePost(statusId: string) {
+    setProfileUserId(null);
+    setTab("timeline");
+    setExpandedThreads((prev) => ({ ...prev, [statusId]: true }));
+    setHighlightStatusId(statusId);
+    window.setTimeout(() => {
+      document.getElementById(`hub-status-${statusId}`)?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }, 80);
+    window.setTimeout(() => setHighlightStatusId(null), 2200);
+  }
+
+  const profileUser = profileUserId ? USERS[profileUserId] : null;
+  const profilePosts = useMemo(() => {
+    if (!profileUserId) return [];
+    return statuses
+      .filter(
+        (s) =>
+          s.authorId === profileUserId &&
+          !s.deleted &&
+          !s.isDm &&
+          s.privacy !== "direct" &&
+          !s.inReplyToId,
+      )
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 5);
+  }, [profileUserId, statuses]);
+
+  useEffect(() => {
+    if (!profileUserId) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setProfileUserId(null);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [profileUserId]);
+
   function switchAccount(userId: string) {
     setCurrentUserId(userId);
     setReplyToId(null);
@@ -213,6 +365,18 @@ export function GuildHubDashboard() {
           : s,
       ),
     );
+    if (added) {
+      const status = statuses.find((s) => s.id === id);
+      if (status) {
+        pushActivity({
+          recipientId: status.authorId,
+          actorId: currentUserId,
+          kind: "favourite",
+          preview: "liked your post",
+          statusId: id,
+        });
+      }
+    }
   }
 
   function toggleReblog(id: string) {
@@ -225,6 +389,18 @@ export function GuildHubDashboard() {
           : s,
       ),
     );
+    if (added) {
+      const status = statuses.find((s) => s.id === id);
+      if (status) {
+        pushActivity({
+          recipientId: status.authorId,
+          actorId: currentUserId,
+          kind: "reblog",
+          preview: "reposted your post",
+          statusId: id,
+        });
+      }
+    }
   }
 
   function toggleReaction(statusId: string, emoji: string) {
@@ -330,6 +506,7 @@ export function GuildHubDashboard() {
     };
 
     if (replyToId) {
+      const parent = statuses.find((s) => s.id === replyToId);
       setStatuses((prev) => [
         next,
         ...prev.map((s) =>
@@ -337,6 +514,15 @@ export function GuildHubDashboard() {
         ),
       ]);
       setExpandedThreads((prev) => ({ ...prev, [replyToId]: true }));
+      if (parent) {
+        pushActivity({
+          recipientId: parent.authorId,
+          actorId: currentUserId,
+          kind: "reply",
+          preview: "replied to your post",
+          statusId: replyToId,
+        });
+      }
     } else {
       setStatuses((prev) => [next, ...prev]);
     }
@@ -354,6 +540,10 @@ export function GuildHubDashboard() {
 
   const tabs: { key: FeedTab; label: string }[] = [
     { key: "timeline", label: "Guild Feed" },
+    {
+      key: "interactions",
+      label: unreadCount > 0 ? `Notifications (${unreadCount})` : "Notifications",
+    },
     { key: "direct", label: "Direct Messages" },
     ...(isAdmin
       ? [{ key: "moderation" as const, label: `Moderation${openReports ? ` (${openReports})` : ""}` }]
@@ -490,6 +680,15 @@ export function GuildHubDashboard() {
                   );
                 }}
               />
+            ) : tab === "interactions" ? (
+              <NotificationsPanel
+                items={myNotifications}
+                unreadCount={unreadCount}
+                onOpen={openNotification}
+                onMarkRead={markNotificationRead}
+                onMarkAllRead={markAllNotificationsRead}
+                onOpenProfile={openProfile}
+              />
             ) : (
               <div className="hub-panel divide-y divide-[var(--hub-line)] overflow-hidden">
                 {filtered.length === 0 && (
@@ -505,15 +704,31 @@ export function GuildHubDashboard() {
                   const threadReplies = repliesByParent[status.id] ?? [];
                   const replyTotal = Math.max(status.replyCount, threadReplies.length);
                   const threadOpen = Boolean(expandedThreads[status.id]);
+                  const highlighted = highlightStatusId === status.id;
                   return (
-                    <article key={status.id} className="px-4 py-4 sm:px-5">
+                    <article
+                      key={status.id}
+                      id={`hub-status-${status.id}`}
+                      className={`px-4 py-4 sm:px-5 transition ${
+                        highlighted ? "bg-[var(--hub-accent-soft)]" : ""
+                      }`}
+                    >
                       <div className="flex gap-3">
-                        <Avatar src={author.avatarUrl} size={48} name={author.displayName} />
+                        <Avatar
+                          src={author.avatarUrl}
+                          size={48}
+                          name={author.displayName}
+                          onClick={() => openProfile(author.id)}
+                        />
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                            <span className="font-semibold text-[var(--hub-navy)]">
+                            <button
+                              type="button"
+                              onClick={() => openProfile(author.id)}
+                              className="font-semibold text-[var(--hub-navy)] hover:underline"
+                            >
                               {author.displayName}
-                            </span>
+                            </button>
                             {author.role === "admin" && (
                               <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-800 ring-1 ring-amber-200">
                                 Admin
@@ -582,6 +797,19 @@ export function GuildHubDashboard() {
                                 <source src={status.videoUrl} type="video/mp4" />
                                 Your browser does not support embedded video.
                               </video>
+                            </div>
+                          )}
+
+                          {status.audioUrl && (
+                            <div className="mt-3 rounded-xl border border-[var(--hub-line)] bg-[#f0f5fa] px-3.5 py-3">
+                              <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-[var(--hub-navy)]">
+                                <Headphones className="h-4 w-4 text-[var(--hub-accent)]" />
+                                {status.audioTitle ?? "Tapping audio"}
+                              </div>
+                              <audio controls preload="auto" className="w-full">
+                                <source src={status.audioUrl} type="audio/mpeg" />
+                                Your browser does not support embedded audio.
+                              </audio>
                             </div>
                           )}
 
@@ -706,12 +934,17 @@ export function GuildHubDashboard() {
                                           src={replyAuthor.avatarUrl}
                                           size={36}
                                           name={replyAuthor.displayName}
+                                          onClick={() => openProfile(replyAuthor.id)}
                                         />
                                         <div className="min-w-0 flex-1">
                                           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                                            <span className="text-sm font-semibold text-[var(--hub-navy)]">
+                                            <button
+                                              type="button"
+                                              onClick={() => openProfile(replyAuthor.id)}
+                                              className="text-sm font-semibold text-[var(--hub-navy)] hover:underline"
+                                            >
                                               {replyAuthor.displayName}
-                                            </span>
+                                            </button>
                                             <span className="text-xs text-[var(--hub-muted)]">
                                               {replyAuthor.handle}
                                             </span>
@@ -760,15 +993,24 @@ export function GuildHubDashboard() {
                 Signed in as
               </p>
               <div className="mt-3 flex items-center gap-3">
-                <Avatar src={currentUser.avatarUrl} size={48} name={currentUser.displayName} />
-                <div className="min-w-0">
-                  <p className="truncate font-semibold text-[var(--hub-navy)]">
+                <Avatar
+                  src={currentUser.avatarUrl}
+                  size={48}
+                  name={currentUser.displayName}
+                  onClick={() => openProfile(currentUser.id)}
+                />
+                <button
+                  type="button"
+                  onClick={() => openProfile(currentUser.id)}
+                  className="min-w-0 text-left"
+                >
+                  <p className="truncate font-semibold text-[var(--hub-navy)] hover:underline">
                     {currentUser.displayName}
                   </p>
                   <p className="truncate text-xs text-[var(--hub-muted)]">
                     {roleLabel(currentUser.role)} · {currentUser.handle}
                   </p>
-                </div>
+                </button>
               </div>
               <div className="hub-role-toggle mt-3 w-full">
                 {DEMO_ACCOUNTS.map((account) => (
@@ -808,14 +1050,70 @@ export function GuildHubDashboard() {
               </a>
             </div>
 
-            <div className="hub-panel space-y-2 p-4">
+            <div className="hub-panel p-4">
               <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--hub-muted)]">
-                Demo tips
+                Demo walkthrough
               </p>
-              <p className="text-xs leading-relaxed text-[var(--hub-muted)]">
-                Switch <strong className="text-[var(--hub-navy)]">Member / Admin</strong> above to
-                compare roles. Members can post and report; admins open Moderation.
+              <p className="mt-2 text-xs leading-relaxed text-[var(--hub-muted)]">
+                Private members conversation space — not the Guild website or PI portal. Try this
+                order:
               </p>
+              <ol className="mt-3 space-y-2.5 text-xs leading-snug text-[var(--hub-ink)]">
+                <li className="flex gap-2">
+                  <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded bg-[var(--hub-accent-soft)] text-[10px] font-bold text-[var(--hub-accent)]">
+                    1
+                  </span>
+                  <span>
+                    <strong className="text-[var(--hub-navy)]">Guild Feed</strong> — Claire’s tapping
+                    video, Sofia’s self-help <em>audio</em>, then <em>View replies</em>.
+                  </span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded bg-[var(--hub-accent-soft)] text-[10px] font-bold text-[var(--hub-accent)]">
+                    2
+                  </span>
+                  <span>
+                    <strong className="text-[var(--hub-navy)]">Profiles</strong> — click a photo or
+                    name for bio + recent posts; try <em>Message</em>.
+                  </span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded bg-[var(--hub-accent-soft)] text-[10px] font-bold text-[var(--hub-accent)]">
+                    3
+                  </span>
+                  <span>
+                    <strong className="text-[var(--hub-navy)]">Notifications</strong> — open activity,
+                    then <em>Open in feed</em> on an item.
+                  </span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded bg-[var(--hub-accent-soft)] text-[10px] font-bold text-[var(--hub-accent)]">
+                    4
+                  </span>
+                  <span>
+                    <strong className="text-[var(--hub-navy)]">Interact</strong> — like or reply,
+                    switch <em>Member / Admin</em>, and check Notifications again.
+                  </span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded bg-[var(--hub-accent-soft)] text-[10px] font-bold text-[var(--hub-accent)]">
+                    5
+                  </span>
+                  <span>
+                    <strong className="text-[var(--hub-navy)]">Direct Messages</strong> — open the tab
+                    or Message from a profile.
+                  </span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded bg-[var(--hub-accent-soft)] text-[10px] font-bold text-[var(--hub-accent)]">
+                    6
+                  </span>
+                  <span>
+                    <strong className="text-[var(--hub-navy)]">Admin</strong> — switch to Admin for
+                    metrics, then <em>Moderation</em> (reports, mute/suspend, invites).
+                  </span>
+                </li>
+              </ol>
             </div>
           </aside>
         </div>
@@ -831,9 +1129,30 @@ export function GuildHubDashboard() {
           <span className="hidden sm:inline" aria-hidden>
             ·
           </span>
-          <span>Designed by Trinagra Venture Studio</span>
+          <span>
+            Designed by{" "}
+            <a
+              href="https://www.louschillaci.com"
+              target="_blank"
+              rel="noreferrer"
+              className="font-medium text-[var(--hub-navy)] hover:underline"
+            >
+              Trinagra Venture Studio
+            </a>
+          </span>
         </div>
       </footer>
+
+      {profileUser && (
+        <ProfileDrawer
+          user={profileUser}
+          posts={profilePosts}
+          isSelf={profileUser.id === currentUserId}
+          onClose={closeProfile}
+          onMessage={() => messageUser(profileUser.id)}
+          onOpenPost={openProfilePost}
+        />
+      )}
 
       {composeOpen && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-[var(--hub-navy)]/35 p-4 sm:items-center">
@@ -948,6 +1267,280 @@ function Metric({ label, value, hint }: { label: string; value: string; hint: st
       </p>
       <p className="mt-0.5 text-sm font-semibold text-[var(--hub-navy)]">{value}</p>
       <p className="text-[11px] text-[var(--hub-muted)]">{hint}</p>
+    </div>
+  );
+}
+
+function notificationKindLabel(kind: NotificationKind) {
+  switch (kind) {
+    case "favourite":
+      return "Liked";
+    case "reblog":
+      return "Reposted";
+    case "reply":
+      return "Replied";
+    case "mention":
+      return "Mentioned";
+    case "follow":
+      return "Followed";
+    default:
+      return "Activity";
+  }
+}
+
+function formatWebsiteLabel(url: string) {
+  return url.replace(/^https?:\/\//i, "").replace(/\/$/, "");
+}
+
+function NotificationKindIcon({ kind }: { kind: NotificationKind }) {
+  const className = "h-3.5 w-3.5";
+  switch (kind) {
+    case "favourite":
+      return <Star className={className} />;
+    case "reblog":
+      return <Repeat2 className={className} />;
+    case "reply":
+      return <Reply className={className} />;
+    case "mention":
+      return <AtSign className={className} />;
+    case "follow":
+      return <UserPlus className={className} />;
+    default:
+      return <Bell className={className} />;
+  }
+}
+
+function NotificationsPanel({
+  items,
+  unreadCount,
+  onOpen,
+  onMarkRead,
+  onMarkAllRead,
+  onOpenProfile,
+}: {
+  items: HubNotification[];
+  unreadCount: number;
+  onOpen: (n: HubNotification) => void;
+  onMarkRead: (id: string) => void;
+  onMarkAllRead: () => void;
+  onOpenProfile: (userId: string) => void;
+}) {
+  return (
+    <div className="hub-panel overflow-hidden">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--hub-line)] px-4 py-3 sm:px-5">
+        <div className="flex items-center gap-2">
+          <Bell className="h-4 w-4 text-[var(--hub-accent)]" />
+          <div>
+            <p className="text-sm font-semibold text-[var(--hub-navy)]">Activity</p>
+            <p className="text-xs text-[var(--hub-muted)]">
+              Likes, replies, mentions, and follows in the Hub
+            </p>
+          </div>
+        </div>
+        {unreadCount > 0 && (
+          <button
+            type="button"
+            onClick={onMarkAllRead}
+            className="rounded-md px-2.5 py-1.5 text-xs font-semibold text-[var(--hub-accent)] transition hover:bg-[var(--hub-accent-soft)]"
+          >
+            Mark all read
+          </button>
+        )}
+      </div>
+
+      {items.length === 0 ? (
+        <p className="px-5 py-12 text-center text-sm text-[var(--hub-muted)]">
+          No activity yet for this account.
+        </p>
+      ) : (
+        <ul className="divide-y divide-[var(--hub-line)]">
+          {items.map((n) => {
+            const actor = USERS[n.actorId];
+            return (
+              <li
+                key={n.id}
+                className={`flex gap-3 px-4 py-3.5 sm:px-5 ${
+                  n.read ? "bg-white" : "bg-[var(--hub-accent-soft)]/60"
+                }`}
+              >
+                <Avatar
+                  src={actor?.avatarUrl ?? ""}
+                  size={40}
+                  name={actor?.displayName ?? "Member"}
+                  onClick={() => onOpenProfile(n.actorId)}
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <span className="inline-flex items-center gap-1 rounded bg-[#eef2f6] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--hub-muted)]">
+                      <NotificationKindIcon kind={n.kind} />
+                      {notificationKindLabel(n.kind)}
+                    </span>
+                    {!n.read && (
+                      <span className="h-1.5 w-1.5 rounded-full bg-[var(--hub-accent)]" aria-label="Unread" />
+                    )}
+                    <span className="text-xs text-[var(--hub-muted)]">
+                      {formatRelativeTime(n.createdAt)}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-sm text-[var(--hub-ink)]">
+                    <button
+                      type="button"
+                      onClick={() => onOpenProfile(n.actorId)}
+                      className="font-semibold text-[var(--hub-navy)] hover:underline"
+                    >
+                      {actor?.displayName ?? "Member"}
+                    </button>{" "}
+                    <span className="text-[var(--hub-muted)]">{n.preview}</span>
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-3 text-xs font-semibold">
+                    {n.statusId && (
+                      <button
+                        type="button"
+                        onClick={() => onOpen(n)}
+                        className="text-[var(--hub-accent)] hover:underline"
+                      >
+                        Open in feed
+                      </button>
+                    )}
+                    {!n.read && (
+                      <button
+                        type="button"
+                        onClick={() => onMarkRead(n.id)}
+                        className="text-[var(--hub-muted)] hover:text-[var(--hub-navy)]"
+                      >
+                        Mark read
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function ProfileDrawer({
+  user,
+  posts,
+  isSelf,
+  onClose,
+  onMessage,
+  onOpenPost,
+}: {
+  user: HubUser;
+  posts: Status[];
+  isSelf: boolean;
+  onClose: () => void;
+  onMessage: () => void;
+  onOpenPost: (statusId: string) => void;
+}) {
+  return (
+    <div className="hub-profile-overlay" role="presentation" onClick={onClose}>
+      <aside
+        role="dialog"
+        aria-modal="true"
+        aria-label={`${user.displayName}'s profile`}
+        className="hub-profile-drawer"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="relative h-28 overflow-hidden bg-[#dbe4ee] sm:h-32">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={user.bannerUrl}
+            alt=""
+            className="h-full w-full object-cover"
+          />
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-[var(--hub-navy)] shadow-sm transition hover:bg-white"
+            aria-label="Close profile"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="px-5 pb-5">
+          <div className="-mt-10 flex items-end justify-between gap-3">
+            <Avatar src={user.avatarUrl} size={80} name={user.displayName} className="ring-4 ring-white" />
+            {!isSelf ? (
+              <button
+                type="button"
+                onClick={onMessage}
+                className="mb-1 inline-flex items-center gap-1.5 rounded-lg bg-[var(--hub-navy)] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#0e3a5f]"
+              >
+                <MessageSquare className="h-3.5 w-3.5" />
+                Message
+              </button>
+            ) : (
+              <span className="mb-2 rounded-md bg-[var(--hub-accent-soft)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[var(--hub-accent)]">
+                You
+              </span>
+            )}
+          </div>
+
+          <div className="mt-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-lg font-semibold text-[var(--hub-navy)]">{user.displayName}</h2>
+              {user.role === "admin" && (
+                <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-800 ring-1 ring-amber-200">
+                  Admin
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-[var(--hub-muted)]">
+              {user.handle} · {roleLabel(user.role)}
+            </p>
+            {user.bio && (
+              <p className="mt-2 text-sm leading-relaxed text-[var(--hub-ink)]">{user.bio}</p>
+            )}
+            {user.websiteUrl && (
+              <a
+                href={user.websiteUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--hub-accent)] hover:underline"
+              >
+                {formatWebsiteLabel(user.websiteUrl)}
+              </a>
+            )}
+          </div>
+
+          <div className="mt-5 border-t border-[var(--hub-line)] pt-4">
+            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--hub-muted)]">
+              Recent in the Hub
+            </p>
+            {posts.length === 0 ? (
+              <p className="mt-3 text-sm text-[var(--hub-muted)]">No public posts yet.</p>
+            ) : (
+              <ul className="mt-3 space-y-2">
+                {posts.map((post) => (
+                  <li key={post.id}>
+                    <button
+                      type="button"
+                      onClick={() => onOpenPost(post.id)}
+                      className="w-full rounded-lg border border-[var(--hub-line)] bg-[#f8fafc] px-3 py-2.5 text-left transition hover:border-[var(--hub-accent)] hover:bg-[var(--hub-accent-soft)]"
+                    >
+                      {post.subject && (
+                        <p className="text-xs font-semibold text-[var(--hub-navy)]">{post.subject}</p>
+                      )}
+                      <p className="mt-0.5 line-clamp-2 text-sm text-[var(--hub-ink)]">
+                        {post.content}
+                      </p>
+                      <p className="mt-1 text-[11px] text-[var(--hub-muted)]">
+                        {formatRelativeTime(post.createdAt)} · Open in feed
+                      </p>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      </aside>
     </div>
   );
 }

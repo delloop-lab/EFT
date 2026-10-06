@@ -136,3 +136,42 @@
   width: 100%;
 }
 
+.hub-profile-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  display: flex;
+  justify-content: flex-end;
+  background: rgba(11, 44, 74, 0.35);
+  animation: hub-fade-in 160ms ease-out;
+}
+
+.hub-profile-drawer {
+  width: min(100%, 26rem);
+  height: 100%;
+  overflow-y: auto;
+  background: var(--hub-panel);
+  box-shadow: -8px 0 28px rgba(11, 44, 74, 0.12);
+  animation: hub-slide-in 200ms ease-out;
+}
+
+@keyframes hub-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes hub-slide-in {
+  from {
+    transform: translateX(1.25rem);
+    opacity: 0.85;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
