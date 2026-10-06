@@ -47,6 +47,14 @@ export type Status = {
   /** Optional attached audio (e.g. guided tapping round) */
   audioUrl?: string;
   audioTitle?: string;
+  /** Link card when the post includes a news / article URL */
+  linkPreview?: {
+    url: string;
+    title?: string;
+    description?: string;
+    imageUrl?: string;
+    siteName?: string;
+  };
   isDm?: boolean;
   dmParticipants?: string[];
   pinned?: boolean;
@@ -366,6 +374,28 @@ export const INITIAL_STATUSES: Status[] = [
     audioTitle: "Gentle self-help tapping round · ~30 sec",
   },
   {
+    id: "s11",
+    authorId: "u-kenji",
+    subject: "Worth a read",
+    content:
+      "Came across this on nervous-system approaches to stress — useful framing to sit alongside skilful EFT in practice.\n\nhttps://www.bbc.com/news/health-68480232\n\nCurious what other members think. #Training #EFTGuild",
+    createdAt: "2026-10-06T07:55:00Z",
+    privacy: "public",
+    replyCount: 1,
+    reblogCount: 4,
+    favouriteCount: 12,
+    reactions: [{ emoji: "📰", count: 3, reacted: false }],
+    linkPreview: {
+      url: "https://www.bbc.com/news/health-68480232",
+      title: "How everyday stress shows up in the body",
+      description:
+        "Researchers explore how chronic stress affects sleep, focus, and physical tension — and what gentle regulation practices can support.",
+      imageUrl:
+        "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=1200&q=80&auto=format&fit=crop",
+      siteName: "BBC News",
+    },
+  },
+  {
     id: "s2",
     authorId: "u-elena",
     subject: "Skilful EFT",
@@ -444,7 +474,7 @@ export const INITIAL_STATUSES: Status[] = [
     authorId: "u-admin",
     subject: "Welcome to the Hub DEMO",
     content:
-      "Welcome to the EFT Guild Hub DEMO 💛\n\nInspired by The EFT Guild — a community of learning and support for people who love EFT tapping (practice partners, advanced training, Borrowing Benefits, and more).\n\nThis board is members-only for the walkthrough. Switch Member / Admin in the sidebar to try the roles.\n\nLearn more about the real Guild at eftguild.org #EFTGuild #EFT #Tapping",
+      "Welcome to the EFT Guild Hub DEMO 💛\n\nInspired by The EFT Guild — a community of learning and support for people who love EFT tapping (practice partners, advanced training, Borrowing Benefits, and more).\n\nLearn more about the real Guild at eftguild.org #EFTGuild #EFT #Tapping",
     createdAt: "2026-10-05T16:00:00Z",
     privacy: "public",
     replyCount: 0,
@@ -737,6 +767,18 @@ export const INITIAL_STATUSES: Status[] = [
     reblogCount: 0,
     favouriteCount: 2,
     inReplyToId: "s10",
+  },
+  {
+    id: "s11-r1",
+    authorId: "u-marina",
+    content:
+      "@kenji Good share — the body-first framing matches what we notice in Practice Circle warm-ups.",
+    createdAt: "2026-10-06T08:08:00Z",
+    privacy: "public",
+    replyCount: 0,
+    reblogCount: 0,
+    favouriteCount: 2,
+    inReplyToId: "s11",
   },
   {
     id: "dm1",

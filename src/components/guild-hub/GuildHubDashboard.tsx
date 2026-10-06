@@ -6,9 +6,11 @@ import {
   Bell,
   ChevronDown,
   ChevronUp,
+  ExternalLink,
   Flag,
   Globe2,
   Headphones,
+  Link2,
   Lock,
   MessageSquare,
   Pin,
@@ -26,7 +28,8 @@ import {
   X,
 } from "lucide-react";
 import Image from "next/image";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ADMIN_USER,
   DEMO_ACCOUNTS,
@@ -52,6 +55,13 @@ import {
   type Privacy,
   type Status,
 } from "@/lib/guild-hub/mockData";
+import {
+  extractFirstHttpUrl,
+  fetchLinkPreview,
+  hostnameOf,
+  stripUrlFromText,
+  type LinkPreview,
+} from "@/lib/guild-hub/linkPreview";
 import "./guild-hub.css";
 
 function toggleIdInMap(
@@ -160,6 +170,9 @@ export function GuildHubDashboard() {
     useState<HubNotification[]>(INITIAL_NOTIFICATIONS);
   const [highlightStatusId, setHighlightStatusId] = useState<string | null>(null);
   const [profileUserId, setProfileUserId] = useState<string | null>(null);
+  const [draftLinkPreview, setDraftLinkPreview] = useState<LinkPreview | null>(null);
+  const [linkPreviewLoading, setLinkPreviewLoading] = useState(false);
+  const lockedPreviewUrlRef = useRef<string | null>(null);
 
   const currentUser = USERS[currentUserId] ?? MEMBER_USER;
   const isAdmin = currentUser.role === "admin";
@@ -343,6 +356,57 @@ export function GuildHubDashboard() {
     return () => window.removeEventListener("keydown", onKey);
   }, [profileUserId]);
 
+  useEffect(() => {
+    if (!composeOpen || privacy === "direct") {
+      setDraftLinkPreview(null);
+      setLinkPreviewLoading(false);
+      lockedPreviewUrlRef.current = null;
+      return;
+    }
+    const url = extractFirstHttpUrl(draft);
+    if (!url) {
+      // Keep the card after the URL is deleted so they can write about the article
+      setLinkPreviewLoading(false);
+      return;
+    }
+    if (lockedPreviewUrlRef.current === url) {
+      setLinkPreviewLoading(false);
+      return;
+    }
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      setLinkPreviewLoading(true);
+      try {
+        const preview = await fetchLinkPreview(url);
+        if (!cancelled) {
+          setDraftLinkPreview(preview);
+          lockedPreviewUrlRef.current = preview ? url : null;
+        }
+      } catch {
+        if (!cancelled) {
+          setDraftLinkPreview(null);
+          lockedPreviewUrlRef.current = null;
+        }
+      } finally {
+        if (!cancelled) setLinkPreviewLoading(false);
+      }
+    }, 550);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [composeOpen, draft, privacy]);
+
+  function clearDraftLinkPreview() {
+    setDraftLinkPreview(null);
+    lockedPreviewUrlRef.current = null;
+  }
+
+  function removeLinkFromDraftKeepPreview() {
+    const url = extractFirstHttpUrl(draft) ?? lockedPreviewUrlRef.current;
+    setDraft(stripUrlFromText(draft, url));
+  }
+
   function switchAccount(userId: string) {
     setCurrentUserId(userId);
     setReplyToId(null);
@@ -485,10 +549,24 @@ export function GuildHubDashboard() {
     showToast("Report submitted to admins");
   }
 
-  function publish() {
+  async function publish() {
     const content = draft.trim();
     if (!content || content.length > maxChars) return;
     const isDm = privacy === "direct";
+
+    let preview = draftLinkPreview;
+    const urlInPost = extractFirstHttpUrl(content);
+    if (!isDm && urlInPost && !preview) {
+      setLinkPreviewLoading(true);
+      try {
+        preview = await fetchLinkPreview(urlInPost);
+      } catch {
+        preview = null;
+      } finally {
+        setLinkPreviewLoading(false);
+      }
+    }
+
     const next: Status = {
       id: `local-${Date.now()}`,
       authorId: currentUserId,
@@ -503,6 +581,7 @@ export function GuildHubDashboard() {
       dmParticipants: isDm ? [currentUserId, dmTargetId] : undefined,
       inReplyToId: replyToId ?? undefined,
       reactions: [],
+      linkPreview: !isDm && preview ? preview : undefined,
     };
 
     if (replyToId) {
@@ -531,9 +610,16 @@ export function GuildHubDashboard() {
     setDraft("");
     setSubject("");
     setReplyToId(null);
+    clearDraftLinkPreview();
     setComposeOpen(false);
     setTab(isDm ? "direct" : "timeline");
-    showToast(isDm ? "Message sent" : "Posted to Guild Feed");
+    showToast(
+      isDm
+        ? "Message sent"
+        : preview?.imageUrl
+          ? "Posted with story image"
+          : "Posted to Guild Feed",
+    );
   }
 
   const dmTargets = Object.values(USERS).filter((u) => u.id !== currentUserId);
@@ -574,18 +660,34 @@ export function GuildHubDashboard() {
                     priority
                   />
                 <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h1 className="text-xl font-semibold tracking-tight text-white sm:text-2xl">
-                      EFT Guild Hub
-                    </h1>
-                    <span className="rounded-md bg-white/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-teal-100">
-                      Demo
-                    </span>
-                  </div>
+                  <h1 className="text-xl font-semibold tracking-tight text-white sm:text-2xl">
+                    EFT Guild Hub
+                  </h1>
                   <p className="mt-0.5 text-sm text-slate-200">
-                    Private members space for The EFT Guild · training, tapping & practice
+                    A private members space for discussions and interaction
                   </p>
                 </div>
+              </div>
+              <div
+                role="tablist"
+                aria-label="Demo guides"
+                className="flex flex-wrap gap-1.5 self-start sm:self-end"
+              >
+                <span
+                  role="tab"
+                  aria-selected="true"
+                  className="rounded-full bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--hub-navy)]"
+                >
+                  Demo walkthrough
+                </span>
+                <Link
+                  href="/new/features"
+                  role="tab"
+                  aria-selected="false"
+                  className="rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-white/90 transition hover:bg-white/25"
+                >
+                  Features &amp; Benefits
+                </Link>
               </div>
             </div>
           </div>
@@ -595,10 +697,11 @@ export function GuildHubDashboard() {
               <Metric label="Members" value={String(metrics.memberCount)} hint="Guild accounts" />
               <Metric label="Active" value={String(metrics.activeUsers)} hint="Last 30 days" />
               <Metric label="Posts" value={String(metrics.localPosts)} hint="Member updates" />
-              <Metric
-                label="Footprint"
-                value={`${metrics.ramUsedMb}MB · ${Math.round((metrics.ramUsedMb / metrics.ramTotalMb) * 100)}%`}
-                hint={`CPU ${metrics.cpuPercent}%`}
+              <FootprintMetric
+                ramUsedMb={metrics.ramUsedMb}
+                ramTotalMb={metrics.ramTotalMb}
+                cpuPercent={metrics.cpuPercent}
+                openReports={openReports}
               />
             </div>
           )}
@@ -811,6 +914,10 @@ export function GuildHubDashboard() {
                                 Your browser does not support embedded audio.
                               </audio>
                             </div>
+                          )}
+
+                          {status.linkPreview && (
+                            <LinkPreviewCard preview={status.linkPreview} className="mt-3" />
                           )}
 
                           {status.reactions && status.reactions.length > 0 && (
@@ -1037,8 +1144,8 @@ export function GuildHubDashboard() {
             <div className="hub-panel p-4">
               <p className="text-sm font-semibold text-[var(--hub-navy)]">For The EFT Guild</p>
               <p className="mt-2 text-xs leading-relaxed text-[var(--hub-muted)]">
-                Members share training reflections, tapping practice, Daisy Chains, and peer
-                support. Invite-only — no public networks.
+                Members share discussions, practice notes, and peer support in one private space.
+                Invite-only — no public networks.
               </p>
               <a
                 href="https://eftguild.org/"
@@ -1064,8 +1171,9 @@ export function GuildHubDashboard() {
                     1
                   </span>
                   <span>
-                    <strong className="text-[var(--hub-navy)]">Guild Feed</strong> — Claire’s tapping
-                    video, Sofia’s self-help <em>audio</em>, then <em>View replies</em>.
+                    <strong className="text-[var(--hub-navy)]">Guild Feed</strong> — Claire’s video,
+                    Sofia’s <em>audio</em>, Kenji’s <em>news link</em> card, then{" "}
+                    <em>View replies</em>.
                   </span>
                 </li>
                 <li className="flex gap-2">
@@ -1091,8 +1199,8 @@ export function GuildHubDashboard() {
                     4
                   </span>
                   <span>
-                    <strong className="text-[var(--hub-navy)]">Interact</strong> — like or reply,
-                    switch <em>Member / Admin</em>, and check Notifications again.
+                    <strong className="text-[var(--hub-navy)]">Interact</strong> — Compose and paste
+                    a news URL to pull its image; like/reply; switch Member / Admin.
                   </span>
                 </li>
                 <li className="flex gap-2">
@@ -1129,17 +1237,7 @@ export function GuildHubDashboard() {
           <span className="hidden sm:inline" aria-hidden>
             ·
           </span>
-          <span>
-            Designed by{" "}
-            <a
-              href="https://www.louschillaci.com"
-              target="_blank"
-              rel="noreferrer"
-              className="font-medium text-[var(--hub-navy)] hover:underline"
-            >
-              Trinagra Venture Studio
-            </a>
-          </span>
+          <span>Designed by Trinagra Venture Studio</span>
         </div>
       </footer>
 
@@ -1170,6 +1268,7 @@ export function GuildHubDashboard() {
                 onClick={() => {
                   setComposeOpen(false);
                   setReplyToId(null);
+                  clearDraftLinkPreview();
                 }}
                 className="text-sm font-medium text-[var(--hub-muted)] hover:text-[var(--hub-navy)]"
               >
@@ -1192,9 +1291,46 @@ export function GuildHubDashboard() {
                 onChange={(e) => setDraft(e.target.value)}
                 rows={6}
                 autoFocus
-                placeholder="Share a tapping note, training question, or practice invite…"
+                placeholder="Paste a story URL for the image, then remove the link and write your note…"
                 className="w-full resize-none rounded-lg border border-[var(--hub-line)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--hub-accent)]/30"
               />
+              {privacy !== "direct" && (linkPreviewLoading || draftLinkPreview) && (
+                <div className="space-y-1.5">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--hub-muted)]">
+                      <Link2 className="h-3.5 w-3.5" />
+                      {linkPreviewLoading ? "Fetching story image…" : "Link preview"}
+                    </p>
+                    {draftLinkPreview && (
+                      <div className="flex flex-wrap items-center gap-2">
+                        {extractFirstHttpUrl(draft) && (
+                          <button
+                            type="button"
+                            onClick={removeLinkFromDraftKeepPreview}
+                            className="text-[11px] font-semibold text-[var(--hub-accent)] hover:underline"
+                          >
+                            Remove link from text
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={clearDraftLinkPreview}
+                          className="text-[11px] font-semibold text-[var(--hub-muted)] hover:text-[var(--hub-navy)]"
+                        >
+                          Dismiss preview
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  {draftLinkPreview && <LinkPreviewCard preview={draftLinkPreview} />}
+                  {draftLinkPreview && !extractFirstHttpUrl(draft) && (
+                    <p className="text-[11px] text-[var(--hub-muted)]">
+                      Link removed from your text — write about the article; the image stays with
+                      the post.
+                    </p>
+                  )}
+                </div>
+              )}
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--hub-muted)]">
                   <label className="inline-flex items-center gap-1.5">
@@ -1237,8 +1373,8 @@ export function GuildHubDashboard() {
                   </span>
                   <button
                     type="button"
-                    onClick={publish}
-                    disabled={!draft.trim() || draft.length > maxChars}
+                    onClick={() => void publish()}
+                    disabled={!draft.trim() || draft.length > maxChars || linkPreviewLoading}
                     className="rounded-lg bg-[var(--hub-navy)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-40"
                   >
                     Post
@@ -1271,6 +1407,85 @@ function Metric({ label, value, hint }: { label: string; value: string; hint: st
   );
 }
 
+function FootprintMetric({
+  ramUsedMb,
+  ramTotalMb,
+  cpuPercent,
+  openReports,
+}: {
+  ramUsedMb: number;
+  ramTotalMb: number;
+  cpuPercent: number;
+  openReports: number;
+}) {
+  const ramPercent = Math.round((ramUsedMb / ramTotalMb) * 100);
+  const load = Math.max(ramPercent, cpuPercent);
+  const status =
+    load >= 85 ? { label: "High load", tone: "bg-rose-100 text-rose-700" } :
+    load >= 60 ? { label: "Busy", tone: "bg-amber-100 text-amber-800" } :
+    { label: "Healthy", tone: "bg-emerald-100 text-emerald-800" };
+
+  return (
+    <div className="rounded-lg bg-[#f8fafc] px-3 py-2.5 ring-1 ring-[var(--hub-line)]">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--hub-muted)]">
+          Hub health
+        </p>
+        <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${status.tone}`}>
+          {status.label}
+        </span>
+      </div>
+      <div className="mt-2 space-y-1.5">
+        <HealthBar
+          label="Memory"
+          value={`${ramUsedMb}MB`}
+          percent={ramPercent}
+          detail={`${ramPercent}% of ${ramTotalMb}MB`}
+        />
+        <HealthBar label="CPU" value={`${cpuPercent}%`} percent={cpuPercent} detail="Live load" />
+      </div>
+      <p className="mt-2 text-[11px] text-[var(--hub-muted)]">
+        {openReports > 0
+          ? `${openReports} open report${openReports === 1 ? "" : "s"} · check Moderation`
+          : "No open reports · all clear"}
+      </p>
+    </div>
+  );
+}
+
+function HealthBar({
+  label,
+  value,
+  percent,
+  detail,
+}: {
+  label: string;
+  value: string;
+  percent: number;
+  detail: string;
+}) {
+  const clamped = Math.min(100, Math.max(0, percent));
+  const barColor =
+    clamped >= 85 ? "bg-rose-500" : clamped >= 60 ? "bg-amber-500" : "bg-[var(--hub-accent)]";
+
+  return (
+    <div>
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="text-[11px] font-medium text-[var(--hub-muted)]">{label}</span>
+        <span className="text-[11px] font-semibold text-[var(--hub-navy)]" title={detail}>
+          {value}
+        </span>
+      </div>
+      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-[#e2e8f0]">
+        <div
+          className={`h-full rounded-full transition-[width] duration-500 ${barColor}`}
+          style={{ width: `${clamped}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
 function notificationKindLabel(kind: NotificationKind) {
   switch (kind) {
     case "favourite":
@@ -1290,6 +1505,49 @@ function notificationKindLabel(kind: NotificationKind) {
 
 function formatWebsiteLabel(url: string) {
   return url.replace(/^https?:\/\//i, "").replace(/\/$/, "");
+}
+
+function LinkPreviewCard({
+  preview,
+  className = "",
+}: {
+  preview: LinkPreview;
+  className?: string;
+}) {
+  const site = preview.siteName || hostnameOf(preview.url);
+  return (
+    <a
+      href={preview.url}
+      target="_blank"
+      rel="noreferrer"
+      className={`block overflow-hidden rounded-xl border border-[var(--hub-line)] bg-white transition hover:border-[var(--hub-accent)] ${className}`}
+    >
+      {preview.imageUrl && (
+        <div className="relative aspect-[1.91/1] max-h-52 w-full overflow-hidden bg-[#e8eef4]">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={preview.imageUrl}
+            alt=""
+            className="h-full w-full object-cover"
+          />
+        </div>
+      )}
+      <div className="space-y-1 px-3.5 py-3">
+        <p className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-[var(--hub-muted)]">
+          <ExternalLink className="h-3 w-3" />
+          {site}
+        </p>
+        {preview.title && (
+          <p className="text-sm font-semibold leading-snug text-[var(--hub-navy)]">{preview.title}</p>
+        )}
+        {preview.description && (
+          <p className="line-clamp-2 text-xs leading-relaxed text-[var(--hub-muted)]">
+            {preview.description}
+          </p>
+        )}
+      </div>
+    </a>
+  );
 }
 
 function NotificationKindIcon({ kind }: { kind: NotificationKind }) {
