@@ -791,7 +791,7 @@ export function GuildHubDashboard() {
                   onClick={() => setComposeOpen(true)}
                   className="flex-1 rounded-xl border border-[var(--hub-line)] bg-[#f8fafc] px-4 py-2.5 text-left text-sm text-[var(--hub-muted)] transition hover:border-[var(--hub-accent)] hover:bg-[var(--hub-accent-soft)]"
                 >
-                  Share a training note or practice invite…
+                  Share an update or start a discussion…
                 </button>
                 <button
                   type="button"
@@ -803,7 +803,7 @@ export function GuildHubDashboard() {
               </div>
               {isAdmin && (
                 <p className="mt-2 text-xs text-[var(--hub-muted)]">
-                  Signed in as admin — you can pin posts, moderate reports, and manage members.
+                  Signed in as admin — you can create and pin posts, moderate reports, and manage members.
                 </p>
               )}
             </section>
@@ -1236,8 +1236,7 @@ export function GuildHubDashboard() {
                 Demo walkthrough
               </p>
               <p className="mt-2 text-xs leading-relaxed text-[var(--hub-muted)]">
-                Private members conversation space — not the Guild website or PI portal. Try this
-                order:
+                Look around the Hub and see what’s happening — then try this order:
               </p>
               <ol className="mt-3 space-y-2.5 text-xs leading-snug text-[var(--hub-ink)]">
                 <li className="flex gap-2">

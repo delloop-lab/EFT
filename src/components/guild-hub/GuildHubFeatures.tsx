@@ -4,6 +4,7 @@ import {
   Lock,
   MessageSquare,
   Shield,
+  Smartphone,
   Users,
   Video,
   Link2,
@@ -61,6 +62,12 @@ const FEATURES = [
     description:
       "No public timelines, no open registration, no outside social networks — a members space that stays with The EFT Guild.",
   },
+  {
+    icon: Smartphone,
+    title: "Works on phones",
+    description:
+      "The Hub is built for phones as well as desktops — members can read, reply, message, and check activity from a pocket-sized screen without a separate app.",
+  },
 ] as const;
 
 const BENEFITS = [
@@ -79,6 +86,10 @@ const BENEFITS = [
   {
     title: "Less admin drag, more Guild control",
     body: "One clear panel instead of hunting through Facebook group settings or Discord roles. Resolve issues quickly, keep membership invite-only, and protect the professional tone of the Guild without depending on tools you don’t own.",
+  },
+  {
+    title: "Ready wherever members are",
+    body: "Phone-friendly layout means practitioners can stay in the conversation between sessions, on the train, or at a Practice Circle — not only at a desk.",
   },
 ] as const;
 
@@ -146,7 +157,8 @@ export function GuildHubFeatures() {
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-[var(--hub-muted)] sm:text-base">
             The EFT Guild Hub is a members-only board for Guild practitioners — not the public
             website, not a public social network. It keeps conversation, practice media, and peer
-            support in one calm place the Guild can own and steward.
+            support in one calm place the Guild can own and steward — and it works on phones as
+            well as desktops.
           </p>
         </section>
 
