@@ -44,7 +44,7 @@ export default function SubmitPage() {
           <Link href="/account" className="btn-primary">
             View my submissions
           </Link>
-          <button type="button" className="btn-secondary" onClick={() => router.push("/")}>
+          <button type="button" className="btn-secondary" onClick={() => router.push("/home")}>
             Back to home
           </button>
         </div>

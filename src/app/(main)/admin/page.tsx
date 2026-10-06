@@ -29,7 +29,7 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (currentUser && !canModerate) {
-      router.replace("/");
+      router.replace("/home");
     }
   }, [currentUser, canModerate, router]);
 

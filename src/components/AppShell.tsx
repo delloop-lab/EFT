@@ -9,7 +9,7 @@ import { Avatar } from "@/components/Avatar";
 import { useDataStore } from "@/lib/data-store";
 
 const navItems = [
-  { href: "/", label: "Home" },
+  { href: "/home", label: "Home" },
   { href: "/news", label: "News" },
   { href: "/discussions", label: "Discussions" },
   { href: "/events", label: "Events" },
@@ -48,7 +48,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     : navItems;
 
   function isActive(href: string) {
-    if (href === "/") return pathname === "/";
+    if (href === "/home") return pathname === "/home";
     return pathname.startsWith(href);
   }
 
@@ -63,7 +63,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
       <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3">
-          <Link href="/" className="flex shrink-0 items-center gap-2">
+          <Link href="/home" className="flex shrink-0 items-center gap-2">
             <Image src="/logo-guild.png" alt="The EFT Guild" width={56} height={56} priority />
             <DemoBadge />
           </Link>

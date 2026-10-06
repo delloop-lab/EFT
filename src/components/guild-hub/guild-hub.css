@@ -25,6 +25,12 @@
   color: var(--hub-navy);
 }
 
+.hub-header-banner h1,
+.hub-header-banner h2,
+.hub-header-banner h3 {
+  color: #ffffff;
+}
+
 .hub-avatar {
   display: block;
   object-fit: cover;

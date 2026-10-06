@@ -24,7 +24,7 @@ function SearchResults() {
       case "member":
         return `/members/${id}`;
       default:
-        return "/";
+        return "/home";
     }
   }
 
