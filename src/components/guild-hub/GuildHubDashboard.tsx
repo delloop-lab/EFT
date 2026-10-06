@@ -2,6 +2,8 @@
 
 import {
   Ban,
+  ChevronDown,
+  ChevronUp,
   Flag,
   Globe2,
   Lock,
@@ -126,11 +128,12 @@ export function GuildHubDashboard() {
   const [draft, setDraft] = useState("");
   const [privacy, setPrivacy] = useState<Privacy>("public");
   const [replyToId, setReplyToId] = useState<string | null>(null);
-  const [dmTargetId, setDmTargetId] = useState("u-marina");
+  const [dmTargetId, setDmTargetId] = useState("u-joao");
   const [metrics, setMetrics] = useState(INSTANCE);
   const [toast, setToast] = useState<string | null>(null);
   const [reactionPickerFor, setReactionPickerFor] = useState<string | null>(null);
   const [composeOpen, setComposeOpen] = useState(false);
+  const [expandedThreads, setExpandedThreads] = useState<Record<string, boolean>>({});
 
   const currentUser = USERS[currentUserId] ?? MEMBER_USER;
   const isAdmin = currentUser.role === "admin";
@@ -160,7 +163,7 @@ export function GuildHubDashboard() {
     if (tab === "moderation" || tab === "about" || tab === "interactions") return [];
     if (tab === "timeline") {
       return visible
-        .filter((s) => !s.isDm && s.privacy !== "direct")
+        .filter((s) => !s.isDm && s.privacy !== "direct" && !s.inReplyToId)
         .sort((a, b) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned)));
     }
     return visible.filter(
@@ -169,6 +172,24 @@ export function GuildHubDashboard() {
         (s.dmParticipants?.includes(currentUserId) || s.authorId === currentUserId),
     );
   }, [statuses, tab, currentUserId, suspendedIds]);
+
+  const repliesByParent = useMemo(() => {
+    const map: Record<string, Status[]> = {};
+    for (const s of statuses) {
+      if (s.deleted || s.inReplyToId == null || suspendedIds.has(s.authorId)) continue;
+      (map[s.inReplyToId] ??= []).push(s);
+    }
+    for (const id of Object.keys(map)) {
+      map[id].sort(
+        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      );
+    }
+    return map;
+  }, [statuses, suspendedIds]);
+
+  function toggleThread(statusId: string) {
+    setExpandedThreads((prev) => ({ ...prev, [statusId]: !prev[statusId] }));
+  }
 
   function switchAccount(userId: string) {
     setCurrentUserId(userId);
@@ -242,8 +263,16 @@ export function GuildHubDashboard() {
     const status = statuses.find((s) => s.id === id);
     if (!status) return;
     if (!(isAdmin || status.authorId === currentUserId)) return;
-    setStatuses((prev) => prev.map((s) => (s.id === id ? { ...s, deleted: true } : s)));
-    if (!status.isDm) {
+    setStatuses((prev) =>
+      prev.map((s) => {
+        if (s.id === id) return { ...s, deleted: true };
+        if (status.inReplyToId && s.id === status.inReplyToId) {
+          return { ...s, replyCount: Math.max(0, s.replyCount - 1) };
+        }
+        return s;
+      }),
+    );
+    if (!status.isDm && !status.inReplyToId) {
       setMetrics((m) => ({ ...m, localPosts: Math.max(0, m.localPosts - 1) }));
     }
     showToast("Post removed");
@@ -307,6 +336,7 @@ export function GuildHubDashboard() {
           s.id === replyToId ? { ...s, replyCount: s.replyCount + 1 } : s,
         ),
       ]);
+      setExpandedThreads((prev) => ({ ...prev, [replyToId]: true }));
     } else {
       setStatuses((prev) => [next, ...prev]);
     }
@@ -335,48 +365,37 @@ export function GuildHubDashboard() {
       <div className="mx-auto max-w-6xl px-4 py-5 sm:px-6 lg:px-8">
         {/* Top bar: brand + role switch */}
         <header className="hub-panel mb-5 overflow-hidden">
-          <div className="flex flex-col gap-4 border-b border-[var(--hub-line)] bg-[var(--hub-navy)] px-4 py-4 text-white sm:flex-row sm:items-center sm:justify-between sm:px-5">
-            <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-white p-1.5">
-                <Image
-                  src="/logo.png"
-                  alt="EFT Guild Hub"
-                  width={44}
-                  height={44}
-                  className="h-11 w-11 object-contain"
-                  priority
-                />
-              </div>
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="text-xl font-semibold tracking-tight text-white sm:text-2xl">
-                    EFT Guild Hub
-                  </h1>
-                  <span className="rounded-md bg-white/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-teal-100">
-                    Demo
-                  </span>
+          <div className="hub-header-banner border-b border-[var(--hub-line)] text-white">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/guild-banner.png"
+              alt=""
+              className="hub-header-banner__image"
+            />
+            <div className="hub-header-banner__shade" aria-hidden />
+            <div className="hub-header-banner__content flex flex-col gap-4 px-4 pb-4 pt-10 sm:flex-row sm:items-end sm:justify-between sm:px-5 sm:pb-5 sm:pt-14">
+              <div className="flex items-end gap-3 sm:gap-4">
+                  <Image
+                    src="/logo-guild.png"
+                    alt="The EFT Guild"
+                    width={96}
+                    height={96}
+                    className="h-[4.5rem] w-[4.5rem] object-contain drop-shadow-md sm:h-24 sm:w-24"
+                    priority
+                  />
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h1 className="text-xl font-semibold tracking-tight text-white sm:text-2xl">
+                      EFT Guild Hub
+                    </h1>
+                    <span className="rounded-md bg-white/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-teal-100">
+                      Demo
+                    </span>
+                  </div>
+                  <p className="mt-0.5 text-sm text-slate-200">
+                    Private members space for The EFT Guild · training, tapping & practice
+                  </p>
                 </div>
-                <p className="mt-0.5 text-sm text-slate-300">
-                  Private members space for The EFT Guild · training, tapping & practice
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-col items-stretch gap-2 sm:items-end">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-300">
-                View as
-              </p>
-              <div className="hub-role-toggle bg-white/10 border-white/15">
-                {DEMO_ACCOUNTS.map((account) => (
-                  <button
-                    key={account.id}
-                    type="button"
-                    onClick={() => switchAccount(account.id)}
-                    className={currentUserId === account.id ? "active !bg-white !text-[var(--hub-navy)]" : "!text-slate-200 hover:!bg-white/10"}
-                  >
-                    {account.role === "admin" ? "Admin" : "Member"}
-                  </button>
-                ))}
               </div>
             </div>
           </div>
@@ -483,6 +502,9 @@ export function GuildHubDashboard() {
                   const favourited = myFavourites.has(status.id);
                   const reblogged = myReblogs.has(status.id);
                   const canDelete = isAdmin || status.authorId === currentUserId;
+                  const threadReplies = repliesByParent[status.id] ?? [];
+                  const replyTotal = Math.max(status.replyCount, threadReplies.length);
+                  const threadOpen = Boolean(expandedThreads[status.id]);
                   return (
                     <article key={status.id} className="px-4 py-4 sm:px-5">
                       <div className="flex gap-3">
@@ -536,6 +558,33 @@ export function GuildHubDashboard() {
                             </div>
                           )}
 
+                          {status.youtubeId && (
+                            <div className="mt-3 overflow-hidden rounded-xl border border-[var(--hub-line)] bg-black aspect-video">
+                              <iframe
+                                src={`https://www.youtube.com/embed/${status.youtubeId}`}
+                                title={status.subject ?? "Guild video"}
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                allowFullScreen
+                                className="h-full w-full"
+                              />
+                            </div>
+                          )}
+
+                          {!status.youtubeId && status.videoUrl && (
+                            <div className="mt-3 overflow-hidden rounded-xl border border-[var(--hub-line)] bg-black">
+                              <video
+                                controls
+                                preload="metadata"
+                                playsInline
+                                poster={status.videoPoster}
+                                className="max-h-80 w-full bg-black"
+                              >
+                                <source src={status.videoUrl} type="video/mp4" />
+                                Your browser does not support embedded video.
+                              </video>
+                            </div>
+                          )}
+
                           {status.reactions && status.reactions.length > 0 && (
                             <div className="mt-2.5 flex flex-wrap gap-1.5">
                               {status.reactions.map((r) => (
@@ -557,7 +606,7 @@ export function GuildHubDashboard() {
                           <div className="relative mt-3 flex flex-wrap items-center gap-0.5 border-t border-[var(--hub-line)] pt-2.5 text-[var(--hub-muted)]">
                             <Action
                               label="Reply"
-                              count={status.replyCount}
+                              count={replyTotal}
                               onClick={() => openReply(status)}
                               icon={<Reply className="h-4 w-4" />}
                             />
@@ -627,6 +676,74 @@ export function GuildHubDashboard() {
                               </div>
                             )}
                           </div>
+
+                          {threadReplies.length > 0 && (
+                            <div className="mt-2.5">
+                              <button
+                                type="button"
+                                onClick={() => toggleThread(status.id)}
+                                className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-xs font-semibold text-[var(--hub-accent)] transition hover:bg-[var(--hub-accent-soft)]"
+                              >
+                                {threadOpen ? (
+                                  <ChevronUp className="h-3.5 w-3.5" />
+                                ) : (
+                                  <ChevronDown className="h-3.5 w-3.5" />
+                                )}
+                                {threadOpen
+                                  ? "Hide replies"
+                                  : `View ${threadReplies.length} ${threadReplies.length === 1 ? "reply" : "replies"}`}
+                              </button>
+
+                              {threadOpen && (
+                                <div className="hub-thread mt-2 space-y-3 border-l-2 border-[var(--hub-line)] pl-3 sm:pl-4">
+                                  {threadReplies.map((reply) => {
+                                    const replyAuthor = USERS[reply.authorId] ?? currentUser;
+                                    const replyCanDelete =
+                                      isAdmin || reply.authorId === currentUserId;
+                                    return (
+                                      <div key={reply.id} className="flex gap-2.5">
+                                        <Avatar
+                                          src={replyAuthor.avatarUrl}
+                                          size={36}
+                                          name={replyAuthor.displayName}
+                                        />
+                                        <div className="min-w-0 flex-1">
+                                          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                                            <span className="text-sm font-semibold text-[var(--hub-navy)]">
+                                              {replyAuthor.displayName}
+                                            </span>
+                                            <span className="text-xs text-[var(--hub-muted)]">
+                                              {replyAuthor.handle}
+                                            </span>
+                                            <span className="text-xs text-[var(--hub-muted)]">
+                                              · {formatRelativeTime(reply.createdAt)}
+                                            </span>
+                                          </div>
+                                          <div className="mt-1 text-sm leading-relaxed text-[var(--hub-ink)]">
+                                            {renderContent(reply.content)}
+                                          </div>
+                                          <div className="mt-1.5 flex flex-wrap items-center gap-0.5 text-[var(--hub-muted)]">
+                                            <Action
+                                              label="Reply"
+                                              onClick={() => openReply(status)}
+                                              icon={<Reply className="h-3.5 w-3.5" />}
+                                            />
+                                            {replyCanDelete && (
+                                              <Action
+                                                label="Delete"
+                                                onClick={() => deleteStatus(reply.id)}
+                                                icon={<Trash2 className="h-3.5 w-3.5" />}
+                                              />
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </article>
@@ -703,6 +820,20 @@ export function GuildHubDashboard() {
           </aside>
         </div>
       </div>
+
+      <footer className="mt-2 border-t border-[var(--hub-line)] bg-white/80">
+        <div className="mx-auto flex max-w-6xl flex-col gap-1 px-4 py-4 text-center text-xs text-[var(--hub-muted)] sm:flex-row sm:flex-wrap sm:items-center sm:justify-center sm:gap-x-3 sm:px-6 lg:px-8">
+          <span>Operated by Emotional Health Ltd.</span>
+          <span className="hidden sm:inline" aria-hidden>
+            ·
+          </span>
+          <span>(c) 2014-2026 Emotional Health Ltd.</span>
+          <span className="hidden sm:inline" aria-hidden>
+            ·
+          </span>
+          <span>Designed by Trinagra Venture Studio</span>
+        </div>
+      </footer>
 
       {composeOpen && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-[var(--hub-navy)]/35 p-4 sm:items-center">
