@@ -227,9 +227,10 @@ export const INITIAL_LOCAL_ACCOUNTS: LocalAccount[] = [
 export const INITIAL_REPORTS: ModerationReport[] = [
   {
     id: "r1",
-    statusId: "s4",
-    reporterId: "u-marina",
-    reason: "Please check — looks like a promotional link outside Guild training resources",
+    statusId: "s12",
+    reporterId: "u-kenji",
+    reason:
+      "Please check — car hire discount post looks like member commercial promo; is this allowed in the Guild Feed?",
     createdAt: "2026-10-06T08:40:00Z",
     state: "open",
   },
@@ -354,6 +355,25 @@ export const INITIAL_STATUSES: Status[] = [
     ],
     imageUrl: "/guild-feed/workshop.jpg",
     imageAlt: "Members gathered in a small practice circle",
+  },
+  {
+    id: "s12",
+    authorId: "u-marina",
+    subject: "Member car hire discount",
+    content:
+      "Guild perk to share — I arranged a members discount with Coastline Car Hire for anyone travelling to training or Practice Circle weekends.\n\nUse code EFTGUILD15 at checkout for 15% off bookings of 3 days or more (UK & Ireland). Link: https://example.com/coastline-eft-members\n\nNot affiliated beyond the member rate — just thought it might help people getting to events. #MembersPerks #EFTGuild",
+    createdAt: "2026-10-06T08:35:00Z",
+    privacy: "public",
+    replyCount: 0,
+    reblogCount: 3,
+    favouriteCount: 9,
+    reactions: [{ emoji: "🚗", count: 2, reacted: false }],
+    linkPreview: {
+      url: "https://example.com/coastline-eft-members",
+      title: "Coastline Car Hire — EFT Guild member rate",
+      description: "15% off for Guild members on stays of 3+ days. Quote EFTGUILD15.",
+      siteName: "Coastline Car Hire",
+    },
   },
   {
     id: "s10",

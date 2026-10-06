@@ -178,6 +178,61 @@ export function GuildHubDashboard() {
   const isAdmin = currentUser.role === "admin";
   const maxChars = metrics.maxStatusChars;
   const openReports = reports.filter((r) => r.state === "open").length;
+
+  const trendingTags = useMemo(() => {
+    const counts = new Map<string, { tag: string; count: number }>();
+    for (const status of statuses) {
+      if (status.deleted || status.isDm || status.inReplyToId) continue;
+      const tags = status.content.match(/#[\w]+/g) ?? [];
+      for (const tag of tags) {
+        const key = tag.toLowerCase();
+        const existing = counts.get(key);
+        if (existing) existing.count += 1;
+        else counts.set(key, { tag, count: 1 });
+      }
+    }
+    const ranked = [...counts.values()].sort(
+      (a, b) => b.count - a.count || a.tag.localeCompare(b.tag),
+    );
+    if (ranked.length === 0) {
+      return {
+        value: "—",
+        hint: "No tags in the feed yet",
+        tooltip: "No trending tags yet",
+      };
+    }
+    const top = ranked.slice(0, 2).map((entry) => entry.tag);
+    const tooltip = ranked
+      .slice(0, 8)
+      .map((entry) => `${entry.tag} (${entry.count})`)
+      .join("\n");
+    return {
+      value: top.join(" · "),
+      hint: "Hover for all top tags",
+      tooltip: `Trending tags\n${tooltip}`,
+    };
+  }, [statuses]);
+
+  const unansweredRate = useMemo(() => {
+    const now = Date.now();
+    const twentyFourHours = 24 * 60 * 60 * 1000;
+    const eligible = statuses.filter(
+      (s) =>
+        !s.deleted &&
+        !s.isDm &&
+        !s.inReplyToId &&
+        s.privacy !== "direct" &&
+        now - new Date(s.createdAt).getTime() >= twentyFourHours,
+    );
+    const quiet = eligible.filter((s) => {
+      const reactionTotal = (s.reactions ?? []).reduce((sum, r) => sum + r.count, 0);
+      return s.replyCount === 0 && reactionTotal === 0;
+    });
+    const percent =
+      eligible.length === 0 ? 0 : Math.round((quiet.length / eligible.length) * 100);
+    return { percent, count: quiet.length };
+  }, [statuses]);
+
   const myNotifications = useMemo(
     () =>
       notifications
@@ -640,8 +695,8 @@ export function GuildHubDashboard() {
     <div className="guild-hub-shell">
       <div className="mx-auto max-w-6xl px-4 py-5 sm:px-6 lg:px-8">
         {/* Top bar: brand + role switch */}
-        <header className="hub-panel mb-5 overflow-hidden">
-          <div className="hub-header-banner border-b border-[var(--hub-line)] text-white">
+        <header className="hub-panel mb-5 overflow-visible">
+          <div className="hub-header-banner overflow-hidden border-b border-[var(--hub-line)] text-white">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/guild-banner.png"
@@ -693,15 +748,33 @@ export function GuildHubDashboard() {
           </div>
 
           {isAdmin && (
-            <div className="grid gap-3 px-4 py-3 sm:grid-cols-2 sm:px-5 lg:grid-cols-4">
+            <div className="flex flex-wrap gap-2 px-4 py-2.5 sm:px-5 lg:flex-nowrap">
               <Metric label="Members" value={String(metrics.memberCount)} hint="Guild accounts" />
               <Metric label="Active" value={String(metrics.activeUsers)} hint="Last 30 days" />
               <Metric label="Posts" value={String(metrics.localPosts)} hint="Member updates" />
-              <FootprintMetric
-                ramUsedMb={metrics.ramUsedMb}
-                ramTotalMb={metrics.ramTotalMb}
-                cpuPercent={metrics.cpuPercent}
-                openReports={openReports}
+              <Metric
+                label="Reports"
+                value={String(openReports)}
+                hint="Open · tap to review"
+                onClick={() => setTab("moderation")}
+              />
+              <Metric
+                label="Peak windows"
+                value="Tue · Thu"
+                hint="19:00–21:00 UK"
+                tooltip={"Peak engagement\nTuesday & Thursday\n19:00–21:00 UK time\nBest for live events & announcements"}
+              />
+              <Metric
+                label="Trending"
+                value={trendingTags.value}
+                hint={trendingTags.hint}
+                tooltip={trendingTags.tooltip}
+              />
+              <Metric
+                label="Unanswered"
+                value={`${unansweredRate.percent}%`}
+                hint={`${unansweredRate.count} quiet after 24h`}
+                tooltip={`Unanswered posts\n${unansweredRate.count} post${unansweredRate.count === 1 ? "" : "s"} with no replies or reactions after 24 hours (${unansweredRate.percent}%)\nWorth a community reach-out`}
               />
             </div>
           )}
@@ -761,6 +834,7 @@ export function GuildHubDashboard() {
                   showToast("Report resolved");
                 }}
                 onDeleteStatus={deleteStatus}
+                onOpenPost={openProfilePost}
                 onSetAccountState={(userId, state) => {
                   if (userId === ADMIN_USER.id) return;
                   setAccounts((prev) =>
@@ -1395,93 +1469,54 @@ export function GuildHubDashboard() {
   );
 }
 
-function Metric({ label, value, hint }: { label: string; value: string; hint: string }) {
-  return (
-    <div className="rounded-lg bg-[#f8fafc] px-3 py-2.5 ring-1 ring-[var(--hub-line)]">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--hub-muted)]">
-        {label}
-      </p>
-      <p className="mt-0.5 text-sm font-semibold text-[var(--hub-navy)]">{value}</p>
-      <p className="text-[11px] text-[var(--hub-muted)]">{hint}</p>
-    </div>
-  );
-}
-
-function FootprintMetric({
-  ramUsedMb,
-  ramTotalMb,
-  cpuPercent,
-  openReports,
-}: {
-  ramUsedMb: number;
-  ramTotalMb: number;
-  cpuPercent: number;
-  openReports: number;
-}) {
-  const ramPercent = Math.round((ramUsedMb / ramTotalMb) * 100);
-  const load = Math.max(ramPercent, cpuPercent);
-  const status =
-    load >= 85 ? { label: "High load", tone: "bg-rose-100 text-rose-700" } :
-    load >= 60 ? { label: "Busy", tone: "bg-amber-100 text-amber-800" } :
-    { label: "Healthy", tone: "bg-emerald-100 text-emerald-800" };
-
-  return (
-    <div className="rounded-lg bg-[#f8fafc] px-3 py-2.5 ring-1 ring-[var(--hub-line)]">
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--hub-muted)]">
-          Hub health
-        </p>
-        <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${status.tone}`}>
-          {status.label}
-        </span>
-      </div>
-      <div className="mt-2 space-y-1.5">
-        <HealthBar
-          label="Memory"
-          value={`${ramUsedMb}MB`}
-          percent={ramPercent}
-          detail={`${ramPercent}% of ${ramTotalMb}MB`}
-        />
-        <HealthBar label="CPU" value={`${cpuPercent}%`} percent={cpuPercent} detail="Live load" />
-      </div>
-      <p className="mt-2 text-[11px] text-[var(--hub-muted)]">
-        {openReports > 0
-          ? `${openReports} open report${openReports === 1 ? "" : "s"} · check Moderation`
-          : "No open reports · all clear"}
-      </p>
-    </div>
-  );
-}
-
-function HealthBar({
+function Metric({
   label,
   value,
-  percent,
-  detail,
+  hint,
+  tooltip,
+  onClick,
 }: {
   label: string;
   value: string;
-  percent: number;
-  detail: string;
+  hint: string;
+  tooltip?: string;
+  onClick?: () => void;
 }) {
-  const clamped = Math.min(100, Math.max(0, percent));
-  const barColor =
-    clamped >= 85 ? "bg-rose-500" : clamped >= 60 ? "bg-amber-500" : "bg-[var(--hub-accent)]";
+  const className =
+    "group relative min-w-0 flex-1 basis-0 rounded-md bg-[#f8fafc] px-2 py-1.5 ring-1 ring-[var(--hub-line)]";
+  const tip = tooltip ?? `${label}\n${value}\n${hint}`;
+  const body = (
+    <>
+      <p className="truncate text-[10px] font-semibold uppercase tracking-wide text-[var(--hub-muted)]">
+        {label}
+      </p>
+      <p className="truncate text-sm font-semibold leading-tight text-[var(--hub-navy)]">{value}</p>
+      <p className="truncate text-[10px] leading-tight text-[var(--hub-muted)]">{hint}</p>
+      <span
+        role="tooltip"
+        className="pointer-events-none absolute left-1/2 top-full z-30 mt-1.5 hidden w-max max-w-[16rem] -translate-x-1/2 rounded-md bg-[var(--hub-navy)] px-2.5 py-2 text-left text-[11px] leading-snug font-medium whitespace-pre-line text-white shadow-lg group-hover:block group-focus-within:block"
+      >
+        {tip}
+      </span>
+    </>
+  );
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className={`${className} text-left transition hover:bg-[var(--hub-accent-soft)] hover:ring-[var(--hub-accent)]`}
+        title="Open Moderation"
+      >
+        {body}
+      </button>
+    );
+  }
 
   return (
-    <div>
-      <div className="flex items-baseline justify-between gap-2">
-        <span className="text-[11px] font-medium text-[var(--hub-muted)]">{label}</span>
-        <span className="text-[11px] font-semibold text-[var(--hub-navy)]" title={detail}>
-          {value}
-        </span>
-      </div>
-      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-[#e2e8f0]">
-        <div
-          className={`h-full rounded-full transition-[width] duration-500 ${barColor}`}
-          style={{ width: `${clamped}%` }}
-        />
-      </div>
+    <div className={className} tabIndex={0}>
+      {body}
     </div>
   );
 }
@@ -1843,6 +1878,7 @@ function ModerationPanel({
   registrationsOpen,
   onResolve,
   onDeleteStatus,
+  onOpenPost,
   onSetAccountState,
   onToggleRegistrations,
 }: {
@@ -1852,6 +1888,7 @@ function ModerationPanel({
   registrationsOpen: boolean;
   onResolve: (id: string) => void;
   onDeleteStatus: (id: string) => void;
+  onOpenPost: (statusId: string) => void;
   onSetAccountState: (userId: string, state: LocalUserState) => void;
   onToggleRegistrations: () => void;
 }) {
@@ -1907,8 +1944,26 @@ function ModerationPanel({
                   )}
                 </div>
                 <p className="mt-2">{report.reason}</p>
+                {status && (
+                  <button
+                    type="button"
+                    onClick={() => onOpenPost(status.id)}
+                    className="mt-2 w-full rounded-md border border-[var(--hub-line)] bg-[#f8fafc] px-2.5 py-2 text-left text-xs transition hover:border-[var(--hub-accent)] hover:bg-[var(--hub-accent-soft)]"
+                  >
+                    <p className="font-semibold text-[var(--hub-navy)]">
+                      {USERS[status.authorId]?.displayName ?? "Member"}
+                      {status.subject ? ` · ${status.subject}` : ""}
+                    </p>
+                    <p className="mt-0.5 line-clamp-2 text-[var(--hub-muted)]">
+                      {status.content.replace(/\n+/g, " ")}
+                    </p>
+                    <p className="mt-1.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--hub-accent)]">
+                      View post in feed →
+                    </p>
+                  </button>
+                )}
                 <p className="mt-1 text-xs text-[var(--hub-muted)]">
-                  From {reporter?.handle ?? "unknown"}
+                  Reported by {reporter?.handle ?? "unknown"}
                 </p>
               </div>
             );
