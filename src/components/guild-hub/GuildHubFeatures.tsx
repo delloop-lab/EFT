@@ -1,5 +1,6 @@
 import {
   Bell,
+  Gauge,
   Headphones,
   Lock,
   MessageSquare,
@@ -68,6 +69,12 @@ const FEATURES = [
     description:
       "The Hub is built for phones as well as desktops — members can read, reply, message, and check activity from a pocket-sized screen without a separate app.",
   },
+  {
+    icon: Gauge,
+    title: "Lighter to run & easier to keep",
+    description:
+      "Uses fewer server and hosting resources than traditional community platforms of this kind — and a simpler setup means less ongoing maintenance for Guild leadership.",
+  },
 ] as const;
 
 const BENEFITS = [
@@ -90,6 +97,10 @@ const BENEFITS = [
   {
     title: "Ready wherever members are",
     body: "Phone-friendly layout means practitioners can stay in the conversation between sessions, on the train, or at a Practice Circle — not only at a desk.",
+  },
+  {
+    title: "Lower footprint, simpler upkeep",
+    body: "Compared with traditional forum-style or social community sites, the Hub is leaner on resources and easier to maintain — so more of the Guild’s energy stays on members, not infrastructure.",
   },
 ] as const;
 
